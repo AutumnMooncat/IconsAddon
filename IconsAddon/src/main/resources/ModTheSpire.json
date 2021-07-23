@@ -2,7 +2,7 @@
   "modid": "${project.artifactId}",
   "name": "${project.name}",
   "author_list": ["MistressAlison"],
-  "credits": "Mistress Alison - Coding",
+  "credits": "Mistress Alison - Coding\nIcons taken from my copy of RPG Maker MV",
   "description": "${project.description}",
   "version": "${project.version}",
   "sts_version": "${SlayTheSpire.version}",

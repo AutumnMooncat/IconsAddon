@@ -55,10 +55,10 @@ public class IconsAddonMod implements PostInitializeSubscriber {
     }
 
     public static void initialize() {
-        logger.info("========================= Initializing Vivian. =========================");
+        logger.info("========================= Initializing Icons Addon. =========================");
         IconsAddonMod iconsAddonMod = new IconsAddonMod();
         DamageTypeIconHelper.addDefaultIcons();
-        logger.info("========================= /Vivian, The Shadow Siren, Initialized/ =========================");
+        logger.info("========================= /Icons Addon Initialized/ =========================");
     }
     
     // ============== /SUBSCRIBE, INITIALIZE/ =================
