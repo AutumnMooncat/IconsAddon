@@ -10,6 +10,10 @@ public abstract class AbstractDamageModifier {
         return false;
     }
 
+    public boolean ignoresThorns() {
+        return false;
+    }
+
     public float atDamageGive(float damage, DamageInfo.DamageType type, AbstractCreature target, AbstractCard card) {
         return damage;
     }

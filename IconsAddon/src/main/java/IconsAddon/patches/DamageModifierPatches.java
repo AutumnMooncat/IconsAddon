@@ -15,6 +15,7 @@ import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.helpers.PowerTip;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
+import com.megacrit.cardcrawl.powers.ThornsPower;
 import javassist.CtBehavior;
 
 import java.util.ArrayList;
@@ -233,6 +234,22 @@ public class DamageModifierPatches {
                 }
                 if (bypass) {
                     return SpireReturn.Return(damageAmount);
+                }
+            }
+            return SpireReturn.Continue();
+        }
+    }
+
+    @SpirePatch(clz = ThornsPower.class, method = "onAttacked")
+    public static class ThornsBypass {
+        @SpirePrefixPatch
+        public static SpireReturn<?> noDamagePls(ThornsPower __instance, DamageInfo info, int damageAmount) {
+            Object obj = DamageModifierManager.BoundDamageInfo.boundObject.get(info);
+            if (obj != null) {
+                for (AbstractDamageModifier mod : DamageModifierManager.modifiers(obj)) {
+                    if (mod.ignoresThorns()) {
+                        return SpireReturn.Return(damageAmount);
+                    }
                 }
             }
             return SpireReturn.Continue();
