@@ -22,11 +22,13 @@ DamageModifierHelper comes packaged with _many_ functions that allow you to bind
 
 DamageModifierManager.addModifier(YourCardRelicWhateverHere, YourDamageModifierHere)
 
-2 - Bind your object to your DamageInfo (NOT needed for cards): 
+2 - Bind your object to your DamageInfo (NOT ALWAYS needed for cards): 
 
 this.addToBottom(new DamageAction(target, DamageModifierHelper.bindDamageInfo(this, source, damage, damageType) 
 
-Card do this step **automatically** when the card is used. Powers, Relics, Monsters, etc. **do not**. Check out DamageModifierHelper for a full list of binding methods.
+Cards do this step **automatically** when the card is used with simple damage actions (DamageAction, DamageAllEnemiesAction, etc.). Powers, Relics, Monsters, etc. **do not**. 
+If your card's damage action is particularily complicated, you can always bind the damage in your action to be safe.
+Check out DamageModifierHelper for a full list of binding methods.
 
 Hooks
 ---
