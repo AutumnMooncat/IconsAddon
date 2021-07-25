@@ -1,9 +1,11 @@
 package IconsAddon.damageModifiers;
 
 import basemod.helpers.TooltipInfo;
+import com.megacrit.cardcrawl.actions.AbstractGameAction;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.core.AbstractCreature;
+import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 
 public abstract class AbstractDamageModifier {
     public boolean ignoresBlock() {
@@ -40,5 +42,13 @@ public abstract class AbstractDamageModifier {
 
     public boolean removeWhenActivated() {
         return false;
+    }
+
+    protected void addToTop(AbstractGameAction action) {
+        AbstractDungeon.actionManager.addToTop(action);
+    }
+
+    protected void addToBot(AbstractGameAction action) {
+        AbstractDungeon.actionManager.addToBottom(action);
     }
 }
