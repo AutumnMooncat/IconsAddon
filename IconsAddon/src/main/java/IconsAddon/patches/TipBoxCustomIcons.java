@@ -181,8 +181,8 @@ public class TipBoxCustomIcons {
         float renderScale = icon.getRenderScale() * textScale;
         Affine2 aff = new Affine2();
         aff.setToTrnRotScl(
-                (offsetX) * Settings.scale,
-                (offsetY - 2f - region.getRegionHeight()/2f) * Settings.scale,
+                (offsetX),
+                (offsetY - ((2f + region.getRegionHeight()/2f) * Settings.scale)),
                 0,
                 Settings.scale * renderScale,
                 Settings.scale * renderScale
