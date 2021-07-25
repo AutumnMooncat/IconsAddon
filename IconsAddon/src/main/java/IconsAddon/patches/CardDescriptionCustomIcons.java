@@ -1,7 +1,7 @@
 package IconsAddon.patches;
 
-import IconsAddon.icons.AbstractDamageTypeIcon;
-import IconsAddon.util.DamageTypeIconHelper;
+import IconsAddon.icons.AbstractCustomIcon;
+import IconsAddon.util.CustomIconHelper;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -18,8 +18,10 @@ import javassist.CtBehavior;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.HashMap;
+import java.util.HashSet;
 
-public class CardDescriptionDamageTypeIcons {
+public class CardDescriptionCustomIcons {
     private static boolean overrideRenderScale;
     private static float renderScale;
 
@@ -28,6 +30,7 @@ public class CardDescriptionDamageTypeIcons {
     public static class RenderSmallIcon
     {
         private static final float CARD_ENERGY_IMG_WIDTH = 26.0f * Settings.scale;
+        private static final HashSet<AbstractCard> reinit = new HashSet<>();
 
         @SpireInsertPatch(
                 locator=Locator.class,
@@ -39,11 +42,15 @@ public class CardDescriptionDamageTypeIcons {
         {
             if (tmp[0].length() > 0 && tmp[0].charAt(0) == '[') {
                 String key = tmp[0].trim();
-                if (key.endsWith(AbstractDamageTypeIcon.CODE_ENDING)) {
+                if (key.endsWith(AbstractCustomIcon.CODE_ENDING)) {
                     key = key.replace("*d", "D").replace("*b", "B").replace("*m", "M");
                 }
-                AbstractDamageTypeIcon icon = DamageTypeIconHelper.getIcon(key);
+                AbstractCustomIcon icon = CustomIconHelper.getIcon(key);
                 if (icon != null) {
+                    if (CustomIconHelper.isCustomIcon(key) && !reinit.contains(__instance)) {
+                        reinit.add(__instance);
+                        __instance.initializeDescription();
+                    }
                     gl.width = CARD_ENERGY_IMG_WIDTH * __instance.drawScale;
                     renderSmallIcon(__instance, sb, icon,
                             (start_x[0] - __instance.current_x) / Settings.scale / __instance.drawScale,
@@ -54,9 +61,9 @@ public class CardDescriptionDamageTypeIcons {
             }
         }
 
-        public static void renderSmallIcon(AbstractCard card, SpriteBatch sb, AbstractDamageTypeIcon icon, float offsetX, float offsetY)
+        public static void renderSmallIcon(AbstractCard card, SpriteBatch sb, AbstractCustomIcon icon, float offsetX, float offsetY)
         {
-            TextureAtlas.AtlasRegion region = icon.getTexture();
+            TextureAtlas.AtlasRegion region = icon.getAtlasTexture();
             float renderScale = icon.getRenderScale();
             Affine2 aff = new Affine2();
             aff.setToTrnRotScl(
@@ -104,18 +111,18 @@ public class CardDescriptionDamageTypeIcons {
         {
             if (tmp[0].length() > 0 && tmp[0].charAt(0) == '[') {
                 String key = tmp[0].trim();
-                if (key.endsWith(AbstractDamageTypeIcon.CODE_ENDING)) {
+                if (key.endsWith(AbstractCustomIcon.CODE_ENDING)) {
                     key = key.replace("*d", "D").replace("*b", "B").replace("*m", "M");
                 }
-                AbstractDamageTypeIcon element = DamageTypeIconHelper.getIcon(key);
-                if (element != null) {
+                AbstractCustomIcon icon = CustomIconHelper.getIcon(key);
+                if (icon != null) {
                     gl.width = card_energy_w * drawScale;
                     try {
                         Method renderSmallEnergy = SingleCardViewPopup.class.getDeclaredMethod("renderSmallEnergy", SpriteBatch.class, TextureAtlas.AtlasRegion.class, float.class, float.class);
                         renderSmallEnergy.setAccessible(true);
                         overrideRenderScale = true;
-                        renderScale = element.getRenderScale();
-                        renderSmallEnergy.invoke(__instance, sb, element.getTexture(),
+                        renderScale = icon.getRenderScale();
+                        renderSmallEnergy.invoke(__instance, sb, icon.getAtlasTexture(),
                                 (start_x[0] - current_x) / Settings.scale / drawScale,
                                 -86.0f - ((card.description.size() - 4.0f) / 2.0f - i + 1.0f) * spacing);
                         overrideRenderScale = false;
@@ -170,7 +177,7 @@ public class CardDescriptionDamageTypeIcons {
         public static void Insert(AbstractCard __instance,  @ByRef GlyphLayout[] gl, String word)
         {
             if (word.length() > 0 && word.charAt(0) == '[') {
-                AbstractDamageTypeIcon icon = DamageTypeIconHelper.getIcon(word.trim());
+                AbstractCustomIcon icon = CustomIconHelper.getIcon(word.trim());
                 if (icon != null) {
                     gl[0].setText(FontHelper.cardDescFont_N, " ");
                     gl[0].width = CARD_ENERGY_IMG_WIDTH;
