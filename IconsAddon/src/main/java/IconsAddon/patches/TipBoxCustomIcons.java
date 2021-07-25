@@ -1,7 +1,7 @@
 package IconsAddon.patches;
 
-import IconsAddon.icons.AbstractDamageTypeIcon;
-import IconsAddon.util.DamageTypeIconHelper;
+import IconsAddon.icons.AbstractCustomIcon;
+import IconsAddon.util.CustomIconHelper;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
@@ -17,7 +17,7 @@ import javassist.CtBehavior;
 
 import java.util.ArrayList;
 
-public class TipBoxIconsPatches {
+public class TipBoxCustomIcons {
 
     @SpirePatch(clz= TipHelper.class, method="renderPowerTips")
     public static class DontYeetPowerIcon
@@ -32,10 +32,10 @@ public class TipBoxIconsPatches {
             for (int i = 0 ; i < words.length ; i++)
             if (words[i].length() > 0 && words[i].charAt(0) == '[') {
                 String key = words[i].trim();
-                if (key.endsWith(AbstractDamageTypeIcon.CODE_ENDING)) {
+                if (key.endsWith(AbstractCustomIcon.CODE_ENDING)) {
                     key = key.replace("*d", "D").replace("*b", "B").replace("*m", "M");
                 }
-                AbstractDamageTypeIcon icon = DamageTypeIconHelper.getIcon(key);
+                AbstractCustomIcon icon = CustomIconHelper.getIcon(key);
                 if (icon != null) {
                     words[i] = "   ";
                     modified = true;
@@ -67,10 +67,10 @@ public class TipBoxIconsPatches {
         {
             if (word[0].length() > 0 && word[0].charAt(0) == '[') {
                 String key = word[0].trim();
-                if (key.endsWith(AbstractDamageTypeIcon.CODE_ENDING)) {
+                if (key.endsWith(AbstractCustomIcon.CODE_ENDING)) {
                     key = key.replace("*d", "D").replace("*b", "B").replace("*m", "M");
                 }
-                AbstractDamageTypeIcon icon = DamageTypeIconHelper.getIcon(key);
+                AbstractCustomIcon icon = CustomIconHelper.getIcon(key);
                 if (icon != null) {
                     float width = CARD_ENERGY_IMG_WIDTH * Settings.scale;
                     ___curWidth[0] += width;
@@ -146,10 +146,10 @@ public class TipBoxIconsPatches {
         {
             if (word[0].length() > 0 && word[0].charAt(0) == '[') {
                 String key = word[0].trim();
-                if (key.endsWith(AbstractDamageTypeIcon.CODE_ENDING)) {
+                if (key.endsWith(AbstractCustomIcon.CODE_ENDING)) {
                     key = key.replace("*d", "D").replace("*b", "B").replace("*m", "M");
                 }
-                AbstractDamageTypeIcon icon = DamageTypeIconHelper.getIcon(key);
+                AbstractCustomIcon icon = CustomIconHelper.getIcon(key);
                 if (icon != null) {
                     float width = CARD_ENERGY_IMG_WIDTH * Settings.scale;
                     renderSmallIcon(sb, icon, x+___curWidth[0], y+___curHeight);
@@ -170,14 +170,14 @@ public class TipBoxIconsPatches {
         }
     }
 
-    public static void renderSmallIcon(SpriteBatch sb, AbstractDamageTypeIcon icon, float offsetX, float offsetY)
+    public static void renderSmallIcon(SpriteBatch sb, AbstractCustomIcon icon, float offsetX, float offsetY)
     {
         renderSmallIcon(sb, icon, offsetX, offsetY, 1f);
     }
 
-    public static void renderSmallIcon(SpriteBatch sb, AbstractDamageTypeIcon icon, float offsetX, float offsetY, float textScale)
+    public static void renderSmallIcon(SpriteBatch sb, AbstractCustomIcon icon, float offsetX, float offsetY, float textScale)
     {
-        TextureAtlas.AtlasRegion region = icon.getTexture();
+        TextureAtlas.AtlasRegion region = icon.getAtlasTexture();
         float renderScale = icon.getRenderScale() * textScale;
         Affine2 aff = new Affine2();
         aff.setToTrnRotScl(

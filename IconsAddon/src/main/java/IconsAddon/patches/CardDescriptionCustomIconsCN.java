@@ -1,7 +1,7 @@
 package IconsAddon.patches;
 
-import IconsAddon.icons.AbstractDamageTypeIcon;
-import IconsAddon.util.DamageTypeIconHelper;
+import IconsAddon.icons.AbstractCustomIcon;
+import IconsAddon.util.CustomIconHelper;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.evacipated.cardcrawl.modthespire.lib.*;
@@ -12,7 +12,7 @@ import com.megacrit.cardcrawl.helpers.FontHelper;
 import com.megacrit.cardcrawl.screens.SingleCardViewPopup;
 import javassist.CtBehavior;
 
-public class CardDescriptionDamageTypeIconsCN {
+public class CardDescriptionCustomIconsCN {
 
     @SpirePatch(clz= AbstractCard.class, method="renderDescriptionCN")
     public static class FixDBM
@@ -24,7 +24,7 @@ public class CardDescriptionDamageTypeIconsCN {
         public static void Insert(AbstractCard __instance, SpriteBatch sb, @ByRef String[] tmp)
         {
             if (tmp[0].length() > 0 && tmp[0].charAt(0) == '[') {
-                AbstractDamageTypeIcon icon = DamageTypeIconHelper.getIcon(tmp[0].trim());
+                AbstractCustomIcon icon = CustomIconHelper.getIcon(tmp[0].trim());
                 if (icon != null) {
                     tmp[0] = tmp[0].replace("D", "*d").replace("B", "*b").replace("M", "*m");
                 }
@@ -55,7 +55,7 @@ public class CardDescriptionDamageTypeIconsCN {
         public static void Insert(SingleCardViewPopup __instance, SpriteBatch sb, @ByRef String[] tmp)
         {
             if (tmp[0].length() > 0 && tmp[0].charAt(0) == '[') {
-                AbstractDamageTypeIcon icon = DamageTypeIconHelper.getIcon(tmp[0].trim());
+                AbstractCustomIcon icon = CustomIconHelper.getIcon(tmp[0].trim());
                 if (icon != null) {
                     tmp[0] = tmp[0].replace("D", "*d").replace("B", "*b").replace("M", "*m");
                 }
@@ -90,7 +90,7 @@ public class CardDescriptionDamageTypeIconsCN {
                                   float CN_DESC_BOX_WIDTH)
         {
             if (word[0].length() > 0 && word[0].charAt(0) == '[') {
-                AbstractDamageTypeIcon icon = DamageTypeIconHelper.getIcon(word[0].trim());
+                AbstractCustomIcon icon = CustomIconHelper.getIcon(word[0].trim());
                 if (icon != null) {
                     gl[0].setText(FontHelper.cardDescFont_N, " ");
                     gl[0].width = CARD_ENERGY_IMG_WIDTH;

@@ -1,6 +1,6 @@
 package IconsAddon;
 
-import IconsAddon.util.DamageTypeIconHelper;
+import IconsAddon.util.CustomIconHelper;
 import basemod.*;
 import basemod.interfaces.*;
 import com.badlogic.gdx.graphics.Texture;
@@ -57,7 +57,7 @@ public class IconsAddonMod implements PostInitializeSubscriber {
     public static void initialize() {
         logger.info("========================= Initializing Icons Addon. =========================");
         IconsAddonMod iconsAddonMod = new IconsAddonMod();
-        DamageTypeIconHelper.addDefaultIcons();
+        CustomIconHelper.addDefaultIcons();
         logger.info("========================= /Icons Addon Initialized/ =========================");
     }
     
