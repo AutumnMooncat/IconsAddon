@@ -1,10 +1,12 @@
 package IconsAddon.icons;
 
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas.AtlasRegion;
 import com.megacrit.cardcrawl.core.Settings;
 
-public abstract class AbstractDamageTypeIcon {
+public abstract class AbstractCustomIcon {
     protected static final int IMG_SIZE = 32;
     protected static final int RENDER_SIZE = 24;
     public static final String CODE_ENDING = "Icon]";
@@ -15,7 +17,11 @@ public abstract class AbstractDamageTypeIcon {
 
     public abstract String name();
 
-    public abstract AtlasRegion getTexture();
+    public abstract Texture getTexture();
+
+    public AtlasRegion getAtlasTexture() {
+        return new TextureAtlas.AtlasRegion(getTexture(), 0, 0, getImgSize(), getImgSize());
+    }
 
     public int getImgSize() {
         return IMG_SIZE;
@@ -26,7 +32,7 @@ public abstract class AbstractDamageTypeIcon {
     }
 
     public AtlasRegion getQueuedTexture() {
-        return getTexture();
+        return getAtlasTexture();
     }
 
     public final void renderExact(SpriteBatch sb, float x, float y, float rotation) {

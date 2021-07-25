@@ -4,7 +4,7 @@ import IconsAddon.util.TextureLoader;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 
-public class FireIcon extends AbstractDamageTypeIcon {
+public class FireIcon extends AbstractCustomIcon {
 
     private static FireIcon singleton;
 
@@ -23,8 +23,7 @@ public class FireIcon extends AbstractDamageTypeIcon {
     }
 
     @Override
-    public TextureAtlas.AtlasRegion getTexture() {
-        Texture tex = TextureLoader.getTexture("IconsAddonResources/images/icons/Fire.png");
-        return new TextureAtlas.AtlasRegion(tex, 0, 0, IMG_SIZE, IMG_SIZE);
+    public Texture getTexture() {
+        return TextureLoader.getTexture("IconsAddonResources/images/icons/Fire.png");
     }
 }

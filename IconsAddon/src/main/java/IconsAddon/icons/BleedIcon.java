@@ -2,9 +2,8 @@ package IconsAddon.icons;
 
 import IconsAddon.util.TextureLoader;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 
-public class BleedIcon extends AbstractDamageTypeIcon {
+public class BleedIcon extends AbstractCustomIcon {
 
     private static BleedIcon singleton;
 
@@ -23,8 +22,7 @@ public class BleedIcon extends AbstractDamageTypeIcon {
     }
 
     @Override
-    public TextureAtlas.AtlasRegion getTexture() {
-        Texture tex = TextureLoader.getTexture("IconsAddonResources/images/icons/Bleed.png");
-        return new TextureAtlas.AtlasRegion(tex, 0, 0, IMG_SIZE, IMG_SIZE);
+    public Texture getTexture() {
+        return TextureLoader.getTexture("IconsAddonResources/images/icons/Bleed.png");
     }
 }

@@ -4,7 +4,7 @@ import IconsAddon.util.TextureLoader;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 
-public class InfatuatedIcon extends AbstractDamageTypeIcon {
+public class InfatuatedIcon extends AbstractCustomIcon {
 
     private static InfatuatedIcon singleton;
 
@@ -23,8 +23,7 @@ public class InfatuatedIcon extends AbstractDamageTypeIcon {
     }
 
     @Override
-    public TextureAtlas.AtlasRegion getTexture() {
-        Texture tex = TextureLoader.getTexture("IconsAddonResources/images/icons/Infatuated.png");
-        return new TextureAtlas.AtlasRegion(tex, 0, 0, IMG_SIZE, IMG_SIZE);
+    public Texture getTexture() {
+        return TextureLoader.getTexture("IconsAddonResources/images/icons/Infatuated.png");
     }
 }
