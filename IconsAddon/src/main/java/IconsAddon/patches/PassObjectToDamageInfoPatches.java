@@ -16,6 +16,7 @@ import javassist.CtBehavior;
 public class PassObjectToDamageInfoPatches {
     private static Object objectInUse;
 
+    /*
     @SpirePatch(clz = AbstractPlayer.class, method = "useCard")
     public static class RememberCardPreUseCall {
         @SpireInsertPatch(locator = Locator.class)
@@ -64,7 +65,7 @@ public class PassObjectToDamageInfoPatches {
                 }
             }
         }
-    }
+    }*/
 
     @SpirePatch(clz = DamageInfo.class, method = "<ctor>", paramtypez = {AbstractCreature.class, int.class, DamageInfo.DamageType.class})
     public static class BindObjectToDamageInfo {
