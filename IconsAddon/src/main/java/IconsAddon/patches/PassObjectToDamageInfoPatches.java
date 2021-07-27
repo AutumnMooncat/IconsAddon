@@ -3,15 +3,9 @@ package IconsAddon.patches;
 import IconsAddon.util.DamageModifierManager;
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.megacrit.cardcrawl.actions.AbstractGameAction;
-import com.megacrit.cardcrawl.actions.GameActionManager;
-import com.megacrit.cardcrawl.cards.AbstractCard;
-import com.megacrit.cardcrawl.cards.CardGroup;
 import com.megacrit.cardcrawl.cards.DamageInfo;
-import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
-import com.megacrit.cardcrawl.monsters.AbstractMonster;
-import javassist.CtBehavior;
 
 public class PassObjectToDamageInfoPatches {
 
@@ -77,7 +71,7 @@ public class PassObjectToDamageInfoPatches {
                 Object o = DamageModifierManager.BoundGameAction.boundObject.get(a);
                 if (o != null) {
                     //If so, this is our bound object to grab DamageMods off
-                    DamageModifierManager.BoundDamageInfo.splice(__instance, o);
+                    DamageModifierManager.BoundDamageInfo.spliceBoundObject(__instance, o);
                 }
             }
         }
