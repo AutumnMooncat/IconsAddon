@@ -19,7 +19,7 @@ public class DamageModifierHelper {
 
     public static DamageInfo makeBoundDamageInfo(Object objectWithDamageModifier, AbstractCreature damageSource, int base, DamageInfo.DamageType type) {
         DamageInfo di = new DamageInfo(damageSource, base, type);
-        DamageModifierManager.BoundDamageInfo.boundObject.set(di, objectWithDamageModifier);
+        DamageModifierManager.BoundDamageInfo.splice(di, objectWithDamageModifier);
         return di;
     }
 
