@@ -18,16 +18,22 @@ Each of the 33 icons comes with a name, and the text render looks for words of t
 _**Damage Modifiers:**_
 DamageModifierHelper comes packaged with _many_ functions that allow you to bind custom Damage Modifiers to damage actions. In order to use a Damage Modifier there are 2 steps to follow (1 step if the object using the Damage Modifier is a card):
 
-1 - Add the Damage Modifier to your object (needed for any object): 
+1 - Add the Damage Modifier to your object: 
+```Java
+    DamageModifierManager.addModifier(YourCardRelicWhateverHere, YourDamageModifierHere)
+```
 
-DamageModifierManager.addModifier(YourCardRelicWhateverHere, YourDamageModifierHere)
+2 - Bind your object to your DamageInfo (or the action): 
+```Java
+    this.addToBottom(new DamageAction(target, DamageModifierHelper.bindDamageInfo(this, source, damage, damageType) 
+    
+    //OR
 
-2 - Bind your object to your DamageInfo (NOT ALWAYS needed for cards): 
+    AbstractGameAction action = fancyGameAction();
+    DamageModifierHelper.bindAction(this, action);
+    this.addToBottom(action);
+```
 
-this.addToBottom(new DamageAction(target, DamageModifierHelper.bindDamageInfo(this, source, damage, damageType) 
-
-Cards do this step **automatically** when the card is used with simple damage actions (DamageAction, DamageAllEnemiesAction, etc.). Powers, Relics, Monsters, etc. **do not**. 
-If your card's damage action is particularily complicated, you can always bind the damage in your action to be safe.
 Check out DamageModifierHelper for a full list of binding methods.
 
 Hooks
@@ -35,7 +41,12 @@ Hooks
 
 The hooks provided by damage modifiers are as follows:
 
+```Java
 boolean ignoresBlock()
+
+boolean ignoresThorns()
+
+boolean removeWhenActivated()
 
 float atDamageGive(float damage, DamageInfo.DamageType type, AbstractCreature target, AbstractCard card)
 
@@ -47,6 +58,13 @@ int onAttackToChangeDamage(DamageInfo info, int damageAmount, AbstractCreature t
 
 void onDamageModifiedByBlock(DamageInfo info, int unblockedAmount, int blockedAmount, AbstractCreature target)
 
-String getCardDescriptor()
+String getCardDescriptor
 
 TooltipInfo getCustomTooltip()
+
+int priority
+
+void addToTop(AbstractGameAction action)
+
+void addToBot(AbstractGameAction action)
+```
