@@ -7,7 +7,7 @@ import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 
-public abstract class AbstractDamageModifier {
+public abstract class AbstractDamageModifier implements Comparable<AbstractDamageModifier> {
     public boolean ignoresBlock() {
         return false;
     }
@@ -44,11 +44,20 @@ public abstract class AbstractDamageModifier {
         return false;
     }
 
+    public int priority() {
+        return 0;
+    }
+
     protected void addToTop(AbstractGameAction action) {
         AbstractDungeon.actionManager.addToTop(action);
     }
 
     protected void addToBot(AbstractGameAction action) {
         AbstractDungeon.actionManager.addToBottom(action);
+    }
+
+    @Override
+    public int compareTo(AbstractDamageModifier other) {
+        return this.priority() - other.priority();
     }
 }
