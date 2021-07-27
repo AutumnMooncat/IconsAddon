@@ -6,7 +6,7 @@
     <groupId>IconsAddon</groupId>
     <artifactId>IconsAddon</artifactId> <!--Keep a note of this one: this is the ID used in the "auto add cards" method-->
     <name>Icons Addon</name>
-    <version>0.0.4</version>
+    <version>0.0.5</version>
     <description>Adds Icons and Damage Modifiers</description>
 
     <properties>
