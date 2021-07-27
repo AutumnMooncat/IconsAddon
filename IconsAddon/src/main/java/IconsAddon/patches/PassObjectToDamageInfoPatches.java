@@ -14,7 +14,6 @@ import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import javassist.CtBehavior;
 
 public class PassObjectToDamageInfoPatches {
-    private static Object objectInUse;
 
     /*
     @SpirePatch(clz = AbstractPlayer.class, method = "useCard")
@@ -71,20 +70,14 @@ public class PassObjectToDamageInfoPatches {
     public static class BindObjectToDamageInfo {
         @SpirePrefixPatch()
         public static void Pls(DamageInfo __instance, AbstractCreature damageSource, int base, DamageInfo.DamageType type) {
-            //When our damage info is created, see if there is an active object in use that caused it to be created
-            if (objectInUse != null) {
-                //If so, this is our bound object to grab DamageMods off
-                DamageModifierManager.BoundDamageInfo.boundObject.set(__instance, objectInUse);
-            } else {
-                //Grab the action current running, as this is what was processing when our damage info was created
-                AbstractGameAction a = AbstractDungeon.actionManager.currentAction;
-                if (a != null) {
-                    //If the action is not null, see if it has an instigator object
-                    Object o = DamageModifierManager.BoundGameAction.boundObject.get(a);
-                    if (o != null) {
-                        //If so, this is our bound object to grab DamageMods off
-                        DamageModifierManager.BoundDamageInfo.boundObject.set(__instance, o);
-                    }
+            //Grab the action currently running, as this is what was processing when our damage info was created
+            AbstractGameAction a = AbstractDungeon.actionManager.currentAction;
+            if (a != null) {
+                //If the action is not null, see if it has an instigator object
+                Object o = DamageModifierManager.BoundGameAction.boundObject.get(a);
+                if (o != null) {
+                    //If so, this is our bound object to grab DamageMods off
+                    DamageModifierManager.BoundDamageInfo.splice(__instance, o);
                 }
             }
         }
