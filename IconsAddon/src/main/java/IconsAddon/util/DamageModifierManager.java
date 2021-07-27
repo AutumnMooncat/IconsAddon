@@ -15,7 +15,15 @@ public class DamageModifierManager {
 
     @SpirePatch(clz = DamageInfo.class, method = SpirePatch.CLASS)
     public static class BoundDamageInfo {
-        public static SpireField<Object> boundObject = new SpireField<>(() -> null);
+        public static final SpireField<Object> boundObject = new SpireField<>(() -> null);
+
+        public static void splice(DamageInfo info, Object object) {
+            if (boundObject.get(info) == null) {
+                boundObject.set(info, object);
+            } else {
+                DamageModifierManager.addModifiers(boundObject.get(info), DamageModifierManager.modifiers(object));
+            }
+        }
     }
 
     @SpirePatch(clz = AbstractGameAction.class, method = SpirePatch.CLASS)
@@ -30,8 +38,31 @@ public class DamageModifierManager {
         boundObjects.get(object).add(damageMod);
     }
 
+    public static void addModifiers(Object object, ArrayList<AbstractDamageModifier> damageMods) {
+        if (!boundObjects.containsKey(object)) {
+            boundObjects.put(object, new ArrayList<>());
+        }
+        boundObjects.get(object).addAll(damageMods);
+    }
+
     public static ArrayList<AbstractDamageModifier> modifiers(Object object) {
         return boundObjects.getOrDefault(object, new ArrayList<>());
+    }
+
+    public static void removeModifier(Object object, AbstractDamageModifier damageMod) {
+        if (boundObjects.containsKey(object)) {
+            boundObjects.get(object).remove(damageMod);
+        }
+    }
+
+    public static void removeModifiers(Object object, ArrayList<AbstractDamageModifier> damageMods) {
+        if (boundObjects.containsKey(object)) {
+            boundObjects.get(object).removeAll(damageMods);
+        }
+    }
+
+    public static void removeAllModifiers(Object object) {
+        boundObjects.remove(object);
     }
 
 
