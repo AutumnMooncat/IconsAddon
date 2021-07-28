@@ -71,7 +71,7 @@ public class PassObjectToDamageInfoPatches {
                 Object o = DamageModifierManager.BoundGameAction.boundObject.get(a);
                 if (o != null) {
                     //If so, this is our bound object to grab DamageMods off
-                    DamageModifierManager.BoundDamageInfo.spliceBoundObject(__instance, o);
+                    DamageModifierManager.spliceBoundObject(__instance, o);
                 }
             }
         }

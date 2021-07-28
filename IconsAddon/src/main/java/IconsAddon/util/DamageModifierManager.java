@@ -15,39 +15,39 @@ public class DamageModifierManager {
     private static final HashMap<Object, ArrayList<AbstractDamageModifier>> boundObjects = new HashMap<>();
 
     @SpirePatch(clz = DamageInfo.class, method = SpirePatch.CLASS)
-    public static class BoundDamageInfo {
-        private static final SpireField<Object> boundObject = new SpireField<>(() -> null);
+    private static class BoundDamageInfo {
+        public static final SpireField<Object> boundObject = new SpireField<>(() -> null);
+    }
 
-        /**
-         * Gets the bound object for the provided DamageInfo
-         * @param info The DamageInfo to lookup the bound object for
-         * @return The object bound to this DamageInfo. Will be null if no object is bound
-         */
-        public static Object getBoundObject(DamageInfo info) {
-            return boundObject.get(info);
-        }
+    /**
+     * Gets the bound object for the provided DamageInfo
+     * @param info The DamageInfo to lookup the bound object for
+     * @return The object bound to this DamageInfo. Will be null if no object is bound
+     */
+    public static Object getBoundObject(DamageInfo info) {
+        return BoundDamageInfo.boundObject.get(info);
+    }
 
-        /**
-         * Binds the object to the DamageInfo is no object is bound. If an object is already bound, adds the modifiers of the new object to the bound object. Should be used in most cases in case multiple mods attempt to bind different damages via patches.
-         * @param info The DamageInfo to bind the object to
-         * @param object The object to bind to the DamageInfo. This associates all DamageModifiers on the object to the DamageInfo
-         */
-        public static void spliceBoundObject(DamageInfo info, Object object) {
-            if (boundObject.get(info) == null) {
-                boundObject.set(info, object);
-            } else {
-                DamageModifierManager.addModifiers(boundObject.get(info), DamageModifierManager.modifiers(object));
-            }
+    /**
+     * Binds the object to the DamageInfo is no object is bound. If an object is already bound, adds the modifiers of the new object to the bound object. Should be used in most cases in case multiple mods attempt to bind different damages via patches.
+     * @param info The DamageInfo to bind the object to
+     * @param object The object to bind to the DamageInfo. This associates all DamageModifiers on the object to the DamageInfo
+     */
+    public static void spliceBoundObject(DamageInfo info, Object object) {
+        if (BoundDamageInfo.boundObject.get(info) == null) {
+            BoundDamageInfo.boundObject.set(info, object);
+        } else {
+            DamageModifierManager.addModifiers(BoundDamageInfo.boundObject.get(info), DamageModifierManager.modifiers(object));
         }
+    }
 
-        /**
-         * Forcefully sets a new bound object to the DamageInfo. Not patch friendly, but may be needed in certain circumstances.
-         * @param info The DamageInfo to bind the object to
-         * @param object The object to bind to the DamageInfo. This associates all DamageModifiers on the object to the DamageInfo
-         */
-        public static void overwriteBoundObject(DamageInfo info, Object object) {
-            boundObject.set(info, object);
-        }
+    /**
+     * Forcefully sets a new bound object to the DamageInfo. Not patch friendly, but may be needed in certain circumstances.
+     * @param info The DamageInfo to bind the object to
+     * @param object The object to bind to the DamageInfo. This associates all DamageModifiers on the object to the DamageInfo
+     */
+    public static void overwriteBoundObject(DamageInfo info, Object object) {
+        BoundDamageInfo.boundObject.set(info, object);
     }
 
     @SpirePatch(clz = AbstractGameAction.class, method = SpirePatch.CLASS)

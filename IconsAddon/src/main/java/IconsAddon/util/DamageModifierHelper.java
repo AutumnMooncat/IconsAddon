@@ -19,7 +19,7 @@ public class DamageModifierHelper {
 
     public static DamageInfo makeBoundDamageInfo(Object objectWithDamageModifier, AbstractCreature damageSource, int base, DamageInfo.DamageType type) {
         DamageInfo di = new DamageInfo(damageSource, base, type);
-        DamageModifierManager.BoundDamageInfo.spliceBoundObject(di, objectWithDamageModifier);
+        DamageModifierManager.spliceBoundObject(di, objectWithDamageModifier);
         return di;
     }
 
@@ -28,7 +28,7 @@ public class DamageModifierHelper {
     }
 
     public static void bindDamageInfo(Object objectWithDamageModifier, DamageInfo info) {
-        DamageModifierManager.BoundDamageInfo.spliceBoundObject(info, objectWithDamageModifier);
+        DamageModifierManager.spliceBoundObject(info, objectWithDamageModifier);
     }
 
     public static void bindAction(Object objectWithDamageModifier, AbstractGameAction action) {
@@ -36,32 +36,32 @@ public class DamageModifierHelper {
     }
 
     public static DamageAction makeModifiedDamageAction(Object objectWithDamageModifier, AbstractCreature target, DamageInfo info, AbstractGameAction.AttackEffect effect) {
-        DamageModifierManager.BoundDamageInfo.spliceBoundObject(info, objectWithDamageModifier);
+        DamageModifierManager.spliceBoundObject(info, objectWithDamageModifier);
         return new DamageAction(target, info, effect);
     }
 
     public static DamageAction makeModifiedDamageAction(Object objectWithDamageModifier, AbstractCreature target, DamageInfo info, int stealGoldAmount) {
-        DamageModifierManager.BoundDamageInfo.spliceBoundObject(info, objectWithDamageModifier);
+        DamageModifierManager.spliceBoundObject(info, objectWithDamageModifier);
         return new DamageAction(target, info, stealGoldAmount);
     }
 
     public static DamageAction makeModifiedDamageAction(Object objectWithDamageModifier, AbstractCreature target, DamageInfo info) {
-        DamageModifierManager.BoundDamageInfo.spliceBoundObject(info, objectWithDamageModifier);
+        DamageModifierManager.spliceBoundObject(info, objectWithDamageModifier);
         return new DamageAction(target, info);
     }
 
     public static DamageAction makeModifiedDamageAction(Object objectWithDamageModifier, AbstractCreature target, DamageInfo info, boolean superFast) {
-        DamageModifierManager.BoundDamageInfo.spliceBoundObject(info, objectWithDamageModifier);
+        DamageModifierManager.spliceBoundObject(info, objectWithDamageModifier);
         return new DamageAction(target, info, superFast);
     }
 
     public static DamageAction makeModifiedDamageAction(Object objectWithDamageModifier, AbstractCreature target, DamageInfo info, AbstractGameAction.AttackEffect effect, boolean superFast) {
-        DamageModifierManager.BoundDamageInfo.spliceBoundObject(info, objectWithDamageModifier);
+        DamageModifierManager.spliceBoundObject(info, objectWithDamageModifier);
         return new DamageAction(target, info, effect, superFast);
     }
 
     public static DamageAction makeModifiedDamageAction(Object objectWithDamageModifier, AbstractCreature target, DamageInfo info, AbstractGameAction.AttackEffect effect, boolean superFast, boolean muteSfx) {
-        DamageModifierManager.BoundDamageInfo.spliceBoundObject(info, objectWithDamageModifier);
+        DamageModifierManager.spliceBoundObject(info, objectWithDamageModifier);
         return new DamageAction(target, info, effect, superFast, muteSfx);
     }
 
@@ -85,7 +85,7 @@ public class DamageModifierHelper {
     }
 
     public static DamageRandomEnemyAction makeModifiedDamageRandomEnemyAction(Object objectWithDamageModifier, DamageInfo info, AbstractGameAction.AttackEffect effect) {
-        DamageModifierManager.BoundDamageInfo.spliceBoundObject(info, objectWithDamageModifier);
+        DamageModifierManager.spliceBoundObject(info, objectWithDamageModifier);
         return new DamageRandomEnemyAction(info, effect);
     }
 
@@ -102,22 +102,22 @@ public class DamageModifierHelper {
     }
 
     public static DamagePerAttackPlayedAction makeModifiedDamagePerAttackPlayedAction(Object objectWithDamageModifier, AbstractCreature target, DamageInfo info, AbstractGameAction.AttackEffect effect) {
-        DamageModifierManager.BoundDamageInfo.spliceBoundObject(info, objectWithDamageModifier);
+        DamageModifierManager.spliceBoundObject(info, objectWithDamageModifier);
         return new DamagePerAttackPlayedAction(target, info, effect);
     }
 
     public static DamagePerAttackPlayedAction makeModifiedDamagePerAttackPlayedAction(Object objectWithDamageModifier, AbstractCreature target, DamageInfo info) {
-        DamageModifierManager.BoundDamageInfo.spliceBoundObject(info, objectWithDamageModifier);
+        DamageModifierManager.spliceBoundObject(info, objectWithDamageModifier);
         return new DamagePerAttackPlayedAction(target, info);
     }
 
     public static DamageCallbackAction makeModifiedDamageCallbackAction(Object objectWithDamageModifier, AbstractCreature target, DamageInfo info, AbstractGameAction.AttackEffect effect, Consumer<Integer> callback) {
-        DamageModifierManager.BoundDamageInfo.spliceBoundObject(info, objectWithDamageModifier);
+        DamageModifierManager.spliceBoundObject(info, objectWithDamageModifier);
         return new DamageCallbackAction(target, info, effect, callback);
     }
 
     public static VampireDamageAction makeModifiedVampireDamageAction(Object objectWithDamageModifier, AbstractCreature target, DamageInfo info, AbstractGameAction.AttackEffect effect) {
-        DamageModifierManager.BoundDamageInfo.spliceBoundObject(info, objectWithDamageModifier);
+        DamageModifierManager.spliceBoundObject(info, objectWithDamageModifier);
         return new VampireDamageAction(target, info, effect);
     }
 

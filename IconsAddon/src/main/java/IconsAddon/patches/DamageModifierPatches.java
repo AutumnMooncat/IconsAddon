@@ -174,7 +174,7 @@ public class DamageModifierPatches {
     public static class onAttackMonster {
         @SpireInsertPatch(rlocs = {34}, localvars = "damageAmount")
         public static void toChangeDamage(AbstractMonster __instance, DamageInfo info, @ByRef int[] damageAmount) {
-            Object obj = DamageModifierManager.BoundDamageInfo.getBoundObject(info);
+            Object obj = DamageModifierManager.getBoundObject(info);
             if (obj != null) {
                 for (AbstractDamageModifier mod : DamageModifierManager.modifiers(obj)) {
                     damageAmount[0] = mod.onAttackToChangeDamage(info, damageAmount[0], __instance);
@@ -184,7 +184,7 @@ public class DamageModifierPatches {
 
         @SpireInsertPatch(rlocs = {44}, localvars = "damageAmount")
         public static void onAttack(AbstractMonster __instance, DamageInfo info, int damageAmount) {
-            Object obj = DamageModifierManager.BoundDamageInfo.getBoundObject(info);
+            Object obj = DamageModifierManager.getBoundObject(info);
             if (obj != null) {
                 for (AbstractDamageModifier mod : DamageModifierManager.modifiers(obj)) {
                     mod.onAttack(info, damageAmount, __instance);
@@ -194,7 +194,7 @@ public class DamageModifierPatches {
 
         @SpirePostfixPatch()
         public static void removeModsAfterUse(AbstractMonster __instance, DamageInfo info) {
-            Object obj = DamageModifierManager.BoundDamageInfo.getBoundObject(info);
+            Object obj = DamageModifierManager.getBoundObject(info);
             if (obj != null) {
                 DamageModifierManager.modifiers(obj).removeIf(AbstractDamageModifier::removeWhenActivated);
             }
@@ -205,7 +205,7 @@ public class DamageModifierPatches {
     public static class onAttackPlayer {
         @SpireInsertPatch(rlocs = {29}, localvars = "damageAmount")
         public static void toChangeDamage(AbstractPlayer __instance, DamageInfo info, @ByRef int[] damageAmount) {
-            Object obj = DamageModifierManager.BoundDamageInfo.getBoundObject(info);
+            Object obj = DamageModifierManager.getBoundObject(info);
             if (obj != null) {
                 for (AbstractDamageModifier mod : DamageModifierManager.modifiers(obj)) {
                     damageAmount[0] = mod.onAttackToChangeDamage(info, damageAmount[0], __instance);
@@ -214,7 +214,7 @@ public class DamageModifierPatches {
         }
         @SpireInsertPatch(rlocs = {55}, localvars = "damageAmount")
         public static void onAttack(AbstractPlayer __instance, DamageInfo info, int damageAmount) {
-            Object obj = DamageModifierManager.BoundDamageInfo.getBoundObject(info);
+            Object obj = DamageModifierManager.getBoundObject(info);
             if (obj != null) {
                 for (AbstractDamageModifier mod : DamageModifierManager.modifiers(obj)) {
                     mod.onAttack(info, damageAmount, __instance);
@@ -223,7 +223,7 @@ public class DamageModifierPatches {
         }
         @SpirePostfixPatch()
         public static void removeModsAfterUse(AbstractPlayer __instance, DamageInfo info) {
-            Object obj = DamageModifierManager.BoundDamageInfo.getBoundObject(info);
+            Object obj = DamageModifierManager.getBoundObject(info);
             if (obj != null) {
                 DamageModifierManager.modifiers(obj).removeIf(AbstractDamageModifier::removeWhenActivated);
             }
@@ -234,7 +234,7 @@ public class DamageModifierPatches {
     public static class BlockStuff {
         @SpirePrefixPatch
         public static SpireReturn<?> block(AbstractCreature __instance, DamageInfo info, int damageAmount) {
-            Object obj = DamageModifierManager.BoundDamageInfo.getBoundObject(info);
+            Object obj = DamageModifierManager.getBoundObject(info);
             if (obj != null) {
                 boolean bypass = false;
                 for (AbstractDamageModifier mod : DamageModifierManager.modifiers(obj)) {
@@ -255,7 +255,7 @@ public class DamageModifierPatches {
     public static class ThornsBypass {
         @SpirePrefixPatch
         public static SpireReturn<?> noDamagePls(ThornsPower __instance, DamageInfo info, int damageAmount) {
-            Object obj = DamageModifierManager.BoundDamageInfo.getBoundObject(info);
+            Object obj = DamageModifierManager.getBoundObject(info);
             if (obj != null) {
                 for (AbstractDamageModifier mod : DamageModifierManager.modifiers(obj)) {
                     if (mod.ignoresThorns()) {
