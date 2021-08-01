@@ -7,8 +7,9 @@ import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
+import com.megacrit.cardcrawl.powers.AbstractPower;
 
-public abstract class AbstractCustomBlockType {
+public abstract class AbstractCustomBlockType implements Comparable<AbstractCustomBlockType>{
     public AbstractCreature owner;
     public int currentAmount;
 
@@ -37,11 +38,11 @@ public abstract class AbstractCustomBlockType {
         return damage;
     }
 
-    public float atDamageReceive(float damage, DamageInfo.DamageType type) {
+    public float atDamageReceive(float damage, DamageInfo.DamageType type, AbstractCreature source) {
         return damage;
     }
 
-    public float atDamageFinalReceive(float damage, DamageInfo.DamageType type) {
+    public float atDamageFinalReceive(float damage, DamageInfo.DamageType type, AbstractCreature source) {
         return damage;
     }
 
@@ -55,9 +56,11 @@ public abstract class AbstractCustomBlockType {
 
     public void onStack(int amount) {}
 
-    public void onRemove() {}
+    public int onRemove(boolean lostByStartOfTurn, DamageInfo info, int remainingDamage) {
+        return remainingDamage;
+    }
 
-    public void onThisBlockDamaged(int lostAmount) {}
+    public void onThisBlockDamaged(DamageInfo info, int lostAmount) {}
 
     public void onAttack(DamageInfo info, int damageAmount, AbstractCreature target) {}
     
@@ -73,6 +76,22 @@ public abstract class AbstractCustomBlockType {
 
     public boolean shouldStack() {
         return true;
+    }
+
+    public boolean onApplyPower(AbstractPower abstractPower, AbstractCreature target, AbstractCreature source) {
+        return true;
+    }
+
+    public int onApplyPowerStacks(AbstractPower power, AbstractCreature target, AbstractCreature source, int stackAmount) {
+        return stackAmount;
+    }
+
+    public int damageReducedPerBlockUsed() {
+        return 1;
+    }
+
+    public boolean negatesRemainingDamageWhenBroken() {
+        return false;
     }
 
     abstract public String getName();
@@ -93,6 +112,15 @@ public abstract class AbstractCustomBlockType {
 
     protected void removeThisBlock() {
         CustomBlockManager.removeSpecificBlockType(this);
+    }
+
+    public int priority() {
+        return 0;
+    }
+
+    @Override
+    public int compareTo(AbstractCustomBlockType other) {
+        return this.priority() - other.priority();
     }
 
 }

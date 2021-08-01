@@ -3,6 +3,7 @@ package IconsAddon.powers;
 import IconsAddon.IconsAddonMod;
 import IconsAddon.util.CustomBlockManager;
 import com.evacipated.cardcrawl.mod.stslib.patches.NeutralPowertypePatch;
+import com.evacipated.cardcrawl.mod.stslib.powers.interfaces.BetterOnApplyPowerPower;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.core.AbstractCreature;
@@ -11,7 +12,7 @@ import com.megacrit.cardcrawl.helpers.TipHelper;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import com.megacrit.cardcrawl.powers.AbstractPower;
 
-public class BlockTipPower extends AbstractPower {
+public class BlockTipPower extends AbstractPower implements BetterOnApplyPowerPower {
 
     public static final String POWER_ID = IconsAddonMod.makeID("BlockTip");
 
@@ -41,16 +42,6 @@ public class BlockTipPower extends AbstractPower {
     }
 
     @Override
-    public float atDamageFinalReceive(float damage, DamageInfo.DamageType type) {
-        return CustomBlockManager.atDamageFinalReceive(owner, damage, type);
-    }
-
-    @Override
-    public float atDamageReceive(float damage, DamageInfo.DamageType damageType) {
-        return CustomBlockManager.atDamageReceive(owner, damage, damageType);
-    }
-
-    @Override
     public int onHeal(int healAmount) {
         return CustomBlockManager.onHeal(owner, healAmount);
     }
@@ -74,6 +65,28 @@ public class BlockTipPower extends AbstractPower {
     public void onPlayCard(AbstractCard card, AbstractMonster m) {
         CustomBlockManager.onPlayCard(owner, card, m);
     }
+
+    @Override
+    public boolean betterOnApplyPower(AbstractPower abstractPower, AbstractCreature target, AbstractCreature source) {
+        return CustomBlockManager.onApplyPower(owner, abstractPower, target, source);
+    }
+
+    @Override
+    public int betterOnApplyPowerStacks(AbstractPower power, AbstractCreature target, AbstractCreature source, int stackAmount) {
+        return CustomBlockManager.onApplyPowerStacks(owner, power, target, source, stackAmount);
+    }
+
+    //No source params, patch instead
+    /*
+    @Override
+    public float atDamageFinalReceive(float damage, DamageInfo.DamageType type) {
+        return CustomBlockManager.atDamageFinalReceive(owner, damage, type);
+    }
+
+    @Override
+    public float atDamageReceive(float damage, DamageInfo.DamageType damageType) {
+        return CustomBlockManager.atDamageReceive(owner, damage, damageType);
+    }*/
 
     //These don't get target params, so we use the patch instead
     /*

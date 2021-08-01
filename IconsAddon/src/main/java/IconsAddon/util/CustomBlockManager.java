@@ -16,8 +16,10 @@ import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.helpers.GameDictionary;
 import com.megacrit.cardcrawl.helpers.TipHelper;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
+import com.megacrit.cardcrawl.powers.AbstractPower;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class CustomBlockManager {
     @SpirePatch(clz = AbstractCreature.class, method = SpirePatch.CLASS)
@@ -70,6 +72,8 @@ public class CustomBlockManager {
             BlockTypes.blockTypes.get(owner).add(0, blockType);
             //Call on application code
             blockType.onApplication();
+            //Sort
+            Collections.sort(BlockTypes.blockTypes.get(owner));
         }
 
         //Flag the block we are about to add is not a Normal Block
@@ -149,6 +153,8 @@ public class CustomBlockManager {
             //If we failed to stack we need a new PlaceHolder
             if (!successfullyStacked) {
                 BlockTypes.blockTypes.get(owner).add(0, makeBlockPlaceholder(owner, owner.currentBlock));
+                //Sort
+                Collections.sort(BlockTypes.blockTypes.get(owner));
             }
 
             //Update description
@@ -202,16 +208,30 @@ public class CustomBlockManager {
         }
     }
 
-    public static float atDamageReceive(AbstractCreature owner, float damage, DamageInfo.DamageType type) {
+    public static float atDamageReceive(AbstractCreature owner, float damage, DamageInfo.DamageType type, AbstractCreature source) {
         for (AbstractCustomBlockType b : blockTypes(owner)) {
-            damage = b.atDamageReceive(damage, type);
+            damage = b.atDamageReceive(damage, type, source);
         }
         return damage;
     }
 
-    public static float atDamageFinalReceive(AbstractCreature owner, float damage, DamageInfo.DamageType type) {
+    public static float atDamageFinalReceive(AbstractCreature owner, float damage, DamageInfo.DamageType type, AbstractCreature source) {
         for (AbstractCustomBlockType b : blockTypes(owner)) {
-            damage = b.atDamageFinalReceive(damage, type);
+            damage = b.atDamageFinalReceive(damage, type, source);
+        }
+        return damage;
+    }
+
+    public static float atDamageGive(AbstractCreature owner, float damage, DamageInfo.DamageType type, AbstractCreature target, AbstractCard card) {
+        for (AbstractCustomBlockType b : blockTypes(owner)) {
+            damage = b.atDamageGive(damage, type, target, card);
+        }
+        return damage;
+    }
+
+    public static float atDamageFinalGive(AbstractCreature owner, float damage, DamageInfo.DamageType type, AbstractCreature target, AbstractCard card) {
+        for (AbstractCustomBlockType b : blockTypes(owner)) {
+            damage = b.atDamageFinalGive(damage, type, target, card);
         }
         return damage;
     }
@@ -254,5 +274,20 @@ public class CustomBlockManager {
         for (AbstractCustomBlockType b : blockTypes(owner)) {
             b.onPlayCard(card, m);
         }
+    }
+
+    public static boolean onApplyPower(AbstractCreature owner, AbstractPower power, AbstractCreature target, AbstractCreature source) {
+        boolean retVal = true;
+        for (AbstractCustomBlockType b : blockTypes(owner)) {
+            retVal &= b.onApplyPower(power, target, source);
+        }
+        return retVal;
+    }
+
+    public static int onApplyPowerStacks(AbstractCreature owner, AbstractPower power, AbstractCreature target, AbstractCreature source, int stackAmount) {
+        for (AbstractCustomBlockType b : blockTypes(owner)) {
+            stackAmount = b.onApplyPowerStacks(power, target, source, stackAmount);
+        }
+        return stackAmount;
     }
 }
