@@ -50,7 +50,7 @@ public abstract class AbstractDamageModifier implements Comparable<AbstractDamag
         return 0;
     }
 
-    public boolean inInnate() {
+    public boolean isInnate() {
         return true;
     }
 
