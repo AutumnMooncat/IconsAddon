@@ -20,6 +20,7 @@ import javassist.CtBehavior;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DamageModifierPatches {
 
@@ -266,6 +267,19 @@ public class DamageModifierPatches {
                 }
             }
             return SpireReturn.Continue();
+        }
+    }
+
+    @SpirePatch(clz = AbstractCard.class, method = "makeStatEquivalentCopy")
+    public static class MakeStatEquivalentCopy {
+        public static AbstractCard Postfix(AbstractCard result, AbstractCard self) {
+            for (AbstractDamageModifier mod : DamageModifierManager.modifiers(self)) {
+                if (!mod.inInnate()) {
+                    DamageModifierManager.addModifier(result, mod);
+                }
+            }
+            //DamageModifierManager.addModifiers(result, DamageModifierManager.modifiers(self).stream().filter(m -> !m.inInnate()).collect(Collectors.toCollection(ArrayList::new)));
+            return result;
         }
     }
 

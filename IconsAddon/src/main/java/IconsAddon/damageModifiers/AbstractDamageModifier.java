@@ -50,6 +50,10 @@ public abstract class AbstractDamageModifier implements Comparable<AbstractDamag
         return 0;
     }
 
+    public boolean inInnate() {
+        return true;
+    }
+
     protected void addToTop(AbstractGameAction action) {
         AbstractDungeon.actionManager.addToTop(action);
     }
