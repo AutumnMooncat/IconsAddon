@@ -1,18 +1,24 @@
 package IconsAddon.patches;
 
 import IconsAddon.blockModifiers.AbstractCustomBlockType;
+import IconsAddon.powers.BlockTipPower;
 import IconsAddon.util.CustomBlockManager;
 import basemod.patches.com.megacrit.cardcrawl.actions.GameActionManager.OnPlayerLoseBlockToggle;
 import basemod.patches.com.megacrit.cardcrawl.core.AbstractCreature.ModifyPlayerLoseBlock;
 import com.badlogic.gdx.math.MathUtils;
 import com.evacipated.cardcrawl.modthespire.lib.*;
+import com.evacipated.cardcrawl.modthespire.patcher.PatchingException;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
+import com.megacrit.cardcrawl.helpers.PowerTip;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
+import javassist.CannotCompileException;
 import javassist.CtBehavior;
+
+import java.util.ArrayList;
 
 public class CustomBlockPatches {
 
@@ -205,6 +211,23 @@ public class CustomBlockPatches {
         @SpireInsertPatch(locator = MonsterDamageFinalGiveLocator.class, localvars = {"tmp"})
         public static void finalGive(AbstractMonster __instance, @ByRef float[] tmp) {
             tmp[0] = CustomBlockManager.atDamageFinalGive(__instance, tmp[0], DamageInfo.DamageType.NORMAL, AbstractDungeon.player, null);
+        }
+    }
+
+    @SpirePatch2(clz = AbstractPlayer.class, method = "renderPowerTips")
+    public static class RenderBlockTooltip {
+        @SpireInsertPatch(locator = Locator.class, localvars = {"tips"})
+        public static void patch(AbstractPlayer __instance, ArrayList<PowerTip> tips) {
+            if (__instance.hasPower(BlockTipPower.POWER_ID)) {
+                tips.add(new PowerTip(__instance.getPower(BlockTipPower.POWER_ID).name, __instance.getPower(BlockTipPower.POWER_ID).description));
+            }
+        }
+
+        private static class Locator extends SpireInsertLocator {
+            public int[] Locate(CtBehavior ctMethodToPatch) throws CannotCompileException, PatchingException {
+                Matcher finalMatcher = new Matcher.FieldAccessMatcher(AbstractPlayer.class, "stance");
+                return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
+            }
         }
     }
 

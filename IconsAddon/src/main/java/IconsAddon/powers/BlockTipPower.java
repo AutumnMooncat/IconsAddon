@@ -4,6 +4,7 @@ import IconsAddon.IconsAddonMod;
 import IconsAddon.util.CustomBlockManager;
 import com.evacipated.cardcrawl.mod.stslib.patches.NeutralPowertypePatch;
 import com.evacipated.cardcrawl.mod.stslib.powers.interfaces.BetterOnApplyPowerPower;
+import com.evacipated.cardcrawl.mod.stslib.powers.interfaces.InvisiblePower;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.core.AbstractCreature;
@@ -12,7 +13,7 @@ import com.megacrit.cardcrawl.helpers.TipHelper;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import com.megacrit.cardcrawl.powers.AbstractPower;
 
-public class BlockTipPower extends AbstractPower implements BetterOnApplyPowerPower {
+public class BlockTipPower extends AbstractPower implements BetterOnApplyPowerPower, InvisiblePower {
 
     public static final String POWER_ID = IconsAddonMod.makeID("BlockTip");
 
