@@ -31,8 +31,8 @@ public class DamageModifierPatches {
                 tooltips[0] = new ArrayList<>();
             }
             for (AbstractDamageModifier mod : DamageModifierManager.modifiers(___card)) {
-                if (mod.getCustomTooltip() != null) {
-                    tooltips[0].add(mod.getCustomTooltip());
+                if (mod.getCustomTooltips() != null) {
+                    tooltips[0].addAll(mod.getCustomTooltips());
                 }
             }
         }
@@ -50,7 +50,7 @@ public class DamageModifierPatches {
                 tooltips[0] = new ArrayList<>();
             }
             for (AbstractDamageModifier mod : DamageModifierManager.modifiers(___card)) {
-                tooltips[0].add(mod.getCustomTooltip());
+                tooltips[0].addAll(mod.getCustomTooltips());
             }
         }
         private static class Locator2 extends SpireInsertLocator {
@@ -72,8 +72,10 @@ public class DamageModifierPatches {
         @SpirePostfixPatch()
         public static void pls(AbstractCard acard, ArrayList<PowerTip>[] t) {
             for (AbstractDamageModifier mod : DamageModifierManager.modifiers(acard)) {
-                if (mod.getCustomTooltip() != null) {
-                    t[0].add(mod.getCustomTooltip().toPowerTip());
+                if (mod.getCustomTooltips() != null) {
+                    for (TooltipInfo tip : mod.getCustomTooltips()) {
+                        t[0].add(tip.toPowerTip());
+                    }
                 }
             }
         }

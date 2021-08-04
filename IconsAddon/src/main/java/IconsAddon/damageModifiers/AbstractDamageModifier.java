@@ -7,6 +7,8 @@ import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 
+import java.util.ArrayList;
+
 public abstract class AbstractDamageModifier implements Comparable<AbstractDamageModifier> {
     public boolean ignoresBlock() {
         return false;
@@ -36,8 +38,8 @@ public abstract class AbstractDamageModifier implements Comparable<AbstractDamag
         return null;
     }
 
-    public TooltipInfo getCustomTooltip() {
-        return null;
+    public ArrayList<TooltipInfo> getCustomTooltips() {
+        return new ArrayList<>();
     }
 
     public boolean removeWhenActivated() {
