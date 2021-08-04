@@ -1,6 +1,7 @@
 package IconsAddon.patches;
 
 import IconsAddon.damageModifiers.AbstractDamageModifier;
+import IconsAddon.powers.OnCreateDamageInfoPower;
 import IconsAddon.util.DamageModifierManager;
 import basemod.abstracts.CustomCard;
 import basemod.helpers.TooltipInfo;
@@ -8,6 +9,8 @@ import basemod.patches.com.megacrit.cardcrawl.cards.AbstractCard.RenderCardDescr
 import basemod.patches.com.megacrit.cardcrawl.screens.SingleCardViewPopup.RenderCardDescriptorsSCV;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.evacipated.cardcrawl.modthespire.lib.*;
+import com.megacrit.cardcrawl.actions.AbstractGameAction;
+import com.megacrit.cardcrawl.actions.GameActionManager;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
@@ -15,14 +18,16 @@ import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.helpers.PowerTip;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
+import com.megacrit.cardcrawl.powers.AbstractPower;
 import com.megacrit.cardcrawl.powers.ThornsPower;
 import javassist.CtBehavior;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class DamageModifierPatches {
+
+    private static Object cardInUse;
 
     @SpirePatch2(clz = basemod.patches.com.megacrit.cardcrawl.helpers.TipHelper.FakeKeywords.class, method = "Prefix")
     public static class AddTooltipTop {
@@ -274,12 +279,59 @@ public class DamageModifierPatches {
     public static class MakeStatEquivalentCopy {
         public static AbstractCard Postfix(AbstractCard result, AbstractCard self) {
             for (AbstractDamageModifier mod : DamageModifierManager.modifiers(self)) {
-                if (!mod.inInnate()) {
+                if (!mod.isInnate()) {
                     DamageModifierManager.addModifier(result, mod);
                 }
             }
             //DamageModifierManager.addModifiers(result, DamageModifierManager.modifiers(self).stream().filter(m -> !m.inInnate()).collect(Collectors.toCollection(ArrayList::new)));
             return result;
+        }
+    }
+
+    @SpirePatch(clz = AbstractPlayer.class, method = "useCard")
+    public static class RememberCardPreUseCall {
+        @SpireInsertPatch(locator = Locator.class)
+        public static void removePowerListener(AbstractPlayer __instance, AbstractCard c, AbstractMonster monster, int energyOnUse) {
+            //Right before you call card.use, set it as the object in use
+            cardInUse = c;
+        }
+        private static class Locator extends SpireInsertLocator {
+            @Override
+            public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+                Matcher finalMatcher = new Matcher.MethodCallMatcher(AbstractCard.class, "use");
+                return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
+            }
+        }
+        @SpireInsertPatch(locator = Locator2.class)
+        public static void ForgetCardPostUseCall(AbstractPlayer __instance, AbstractCard c, AbstractMonster monster, int energyOnUse) {
+            //Once you call card.use, set the object back to null, as any actions were already added to the queue
+            cardInUse = null;
+        }
+        private static class Locator2 extends SpireInsertLocator {
+            @Override
+            public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+                Matcher finalMatcher = new Matcher.MethodCallMatcher(GameActionManager.class, "addToBottom");
+                return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
+            }
+        }
+    }
+
+    @SpirePatch(clz = GameActionManager.class, method = "addToTop")
+    @SpirePatch(clz = GameActionManager.class, method = "addToBottom")
+    public static class BindObjectToAction {
+        @SpirePrefixPatch
+        public static void WithoutCrashingHopefully(GameActionManager __instance, AbstractGameAction action) {
+            //When our action is added to the queue, see if there is an active object in use that caused this to happen
+            if (cardInUse != null) {
+                //If so, this is our instigator object, we need to add any non-innate card mods
+                Object o = new Object();
+                for (AbstractDamageModifier mod : DamageModifierManager.modifiers(__instance)) {
+                    if (!mod.isInnate()) {
+                        DamageModifierManager.addModifier(o, mod);
+                    }
+                }
+                DamageModifierManager.BoundGameAction.boundObject.set(action, o);
+            }
         }
     }
 
