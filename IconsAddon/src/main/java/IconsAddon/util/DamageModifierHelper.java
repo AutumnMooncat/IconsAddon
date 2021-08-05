@@ -94,9 +94,11 @@ public class DamageModifierHelper {
             if (bindingObject != null) {
                 DamageModifierManager.spliceBoundObject(__instance, bindingObject);
             }
-            for (AbstractPower p : damageSource.powers) {
-                if (p instanceof OnCreateDamageInfoPower) {
-                    ((OnCreateDamageInfoPower) p).onCreateDamageInfo(__instance);
+            if (damageSource != null) {
+                for (AbstractPower p : damageSource.powers) {
+                    if (p instanceof OnCreateDamageInfoPower) {
+                        ((OnCreateDamageInfoPower) p).onCreateDamageInfo(__instance);
+                    }
                 }
             }
         }
