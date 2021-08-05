@@ -3,14 +3,17 @@ package IconsAddon;
 import IconsAddon.util.CustomIconHelper;
 import basemod.*;
 import basemod.interfaces.*;
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.evacipated.cardcrawl.modthespire.lib.SpireInitializer;
+import com.megacrit.cardcrawl.core.Settings;
+import com.megacrit.cardcrawl.localization.UIStrings;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import IconsAddon.util.TextureLoader;
 
 @SpireInitializer
-public class IconsAddonMod implements PostInitializeSubscriber {
+public class IconsAddonMod implements PostInitializeSubscriber, EditStringsSubscriber {
     public static final Logger logger = LogManager.getLogger(IconsAddonMod.class.getName());
     private static String modID;
 
@@ -85,7 +88,32 @@ public class IconsAddonMod implements PostInitializeSubscriber {
     
     // =============== / POST-INITIALIZE/ =================
 
+    // ================ LOAD THE LOCALIZATION ===================
+
+    private String loadLocalizationIfAvailable(String fileName) {
+        if (!Gdx.files.internal(getModID() + "Resources/localization/" + Settings.language.toString().toLowerCase()+ "/" + fileName).exists()) {
+            logger.info("Language: " + Settings.language.toString().toLowerCase() + ", not currently supported for " +fileName+".");
+            return "eng" + "/" + fileName;
+        } else {
+            logger.info("Loaded Language: "+ Settings.language.toString().toLowerCase() + ", for "+fileName+".");
+            return Settings.language.toString().toLowerCase() + "/" + fileName;
+        }
+    }
+
+    // ================ /LOAD THE LOCALIZATION/ ===================
+
+    // ================ LOAD STRINGS ===================
+
     public static String makeID(String idText) {
         return getModID() + ":" + idText;
     }
+
+    @Override
+    public void receiveEditStrings() {
+        // UIStrings
+        BaseMod.loadCustomStringsFile(UIStrings.class,
+                getModID() + "Resources/localization/"+loadLocalizationIfAvailable("IconsAddon-UI-Strings.json"));
+    }
+
+    // ================ /LOAD STRINGS/ ===================
 }

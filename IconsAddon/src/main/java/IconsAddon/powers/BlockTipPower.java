@@ -1,7 +1,7 @@
 package IconsAddon.powers;
 
 import IconsAddon.IconsAddonMod;
-import IconsAddon.util.CustomBlockManager;
+import IconsAddon.util.BlockModifierManager;
 import com.evacipated.cardcrawl.mod.stslib.patches.NeutralPowertypePatch;
 import com.evacipated.cardcrawl.mod.stslib.powers.interfaces.BetterOnApplyPowerPower;
 import com.evacipated.cardcrawl.mod.stslib.powers.interfaces.InvisiblePower;
@@ -27,54 +27,43 @@ public class BlockTipPower extends AbstractPower implements BetterOnApplyPowerPo
     }
 
     @Override
-    public void onInitialApplication() {
-        updateDescription();
-    }
-
-    @Override
-    public void updateDescription() {
-        //this.amount = owner.currentBlock;
-        this.description = CustomBlockManager.makeTipDescription(owner);
-    }
-
-    @Override
     public void atEndOfRound() {
-        CustomBlockManager.atEndOfRound(owner);
+        BlockModifierManager.atEndOfRound(owner);
     }
 
     @Override
     public int onHeal(int healAmount) {
-        return CustomBlockManager.onHeal(owner, healAmount);
+        return BlockModifierManager.onHeal(owner, healAmount);
     }
 
     @Override
     public int onAttacked(DamageInfo info, int damageAmount) {
-        return CustomBlockManager.onAttackedPostBlockReductions(owner, info, damageAmount);
+        return BlockModifierManager.onAttackedPostBlockReductions(owner, info, damageAmount);
     }
 
     @Override
     public void onAttack(DamageInfo info, int damageAmount, AbstractCreature target) {
-        CustomBlockManager.onAttack(owner, info, damageAmount, target);
+        BlockModifierManager.onAttack(owner, info, damageAmount, target);
     }
 
     @Override
     public void onCardDraw(AbstractCard card) {
-        CustomBlockManager.onCardDraw(owner, card);
+        BlockModifierManager.onCardDraw(owner, card);
     }
 
     @Override
     public void onPlayCard(AbstractCard card, AbstractMonster m) {
-        CustomBlockManager.onPlayCard(owner, card, m);
+        BlockModifierManager.onPlayCard(owner, card, m);
     }
 
     @Override
     public boolean betterOnApplyPower(AbstractPower abstractPower, AbstractCreature target, AbstractCreature source) {
-        return CustomBlockManager.onApplyPower(owner, abstractPower, target, source);
+        return BlockModifierManager.onApplyPower(owner, abstractPower, target, source);
     }
 
     @Override
     public int betterOnApplyPowerStacks(AbstractPower power, AbstractCreature target, AbstractCreature source, int stackAmount) {
-        return CustomBlockManager.onApplyPowerStacks(owner, power, target, source, stackAmount);
+        return BlockModifierManager.onApplyPowerStacks(owner, power, target, source, stackAmount);
     }
 
     //No source params, patch instead

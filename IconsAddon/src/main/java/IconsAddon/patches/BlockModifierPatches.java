@@ -1,30 +1,31 @@
 package IconsAddon.patches;
 
-import IconsAddon.blockModifiers.AbstractCustomBlockType;
-import IconsAddon.powers.BlockTipPower;
-import IconsAddon.util.CustomBlockManager;
+import IconsAddon.blockModifiers.AbstractBlockModifier;
+import IconsAddon.powers.OnCreateBlockContainerPower;
+import IconsAddon.util.BlockContainer;
+import IconsAddon.util.BlockModifierManager;
 import basemod.patches.com.megacrit.cardcrawl.actions.GameActionManager.OnPlayerLoseBlockToggle;
 import basemod.patches.com.megacrit.cardcrawl.core.AbstractCreature.ModifyPlayerLoseBlock;
 import com.badlogic.gdx.math.MathUtils;
 import com.evacipated.cardcrawl.modthespire.lib.*;
-import com.evacipated.cardcrawl.modthespire.patcher.PatchingException;
+import com.megacrit.cardcrawl.actions.AbstractGameAction;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
-import com.megacrit.cardcrawl.helpers.PowerTip;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
-import javassist.CannotCompileException;
+import com.megacrit.cardcrawl.powers.AbstractPower;
 import javassist.CtBehavior;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
-public class CustomBlockPatches {
+public class BlockModifierPatches {
 
-    public static AbstractCustomBlockType specificBlockToReduce = null;
-    public static boolean isNormalBlock = true;
+    public static BlockContainer specificContainerToReduce = null;
     public static DamageInfo workingInfo;
+    public static Object boundObject;
 
     @SpirePatch(clz = ModifyPlayerLoseBlock.class, method = "Prefix")
     public static class ModifyStartOfTurnBlockLossPatch {
@@ -34,20 +35,25 @@ public class CustomBlockPatches {
                 int tmp = amount[0];
                 int removedAmount;
                 //Specifically retain the block types that are not fully removed
-                for (AbstractCustomBlockType b : CustomBlockManager.blockTypes(__instance)) {
-                    removedAmount = Math.min(b.currentAmount, Math.min(b.amountLostAtStartOfTurn(), tmp));
-                    b.onStartOfTurnBlockLoss(removedAmount);
-                    b.currentAmount -= removedAmount;
+                for (BlockContainer b : BlockModifierManager.blockContainers(__instance)) {
+                    removedAmount = Math.min(b.getBlockAmount(), Math.min(b.computeStartTurnBlockLoss(), tmp));
+                    for (AbstractBlockModifier m : b.getBlockTypes()) {
+                        m.onStartOfTurnBlockLoss(removedAmount);
+                    }
+
+                    b.setBlockAmount(b.getBlockAmount() - removedAmount);
                     tmp -= removedAmount;
-                    if (b.currentAmount <= 0) {
-                        tmp = b.onRemove(true, workingInfo, tmp);
+                    if (b.getBlockAmount() <= 0) {
+                        for (AbstractBlockModifier m : b.getBlockTypes()) {
+                            tmp = m.onRemove(true, workingInfo, tmp);
+                        }
                     }
                     if (tmp <= 0) {
                         break;
                     }
                 }
-                CustomBlockManager.removeEmptyBlockTypes(__instance);
-                amount[0] = CustomBlockManager.getBlockRetValBasedOnRemainingAmounts(__instance);
+                BlockModifierManager.removeEmptyBlockContainers(__instance);
+                amount[0] = BlockModifierManager.getBlockRetValBasedOnRemainingAmounts(__instance);
             }
         }
     }
@@ -62,25 +68,31 @@ public class CustomBlockPatches {
             int backupIndex = -1;
             int reduction = 0;
             int effectiveAmount;
-            if (specificBlockToReduce != null) {
-                backupIndex = CustomBlockManager.blockTypes(__instance).indexOf(specificBlockToReduce);
-                CustomBlockManager.blockTypes(__instance).remove(backupIndex);
-                CustomBlockManager.blockTypes(__instance).add(0, specificBlockToReduce);
+            if (specificContainerToReduce != null) {
+                backupIndex = BlockModifierManager.blockContainers(__instance).indexOf(specificContainerToReduce);
+                BlockModifierManager.blockContainers(__instance).remove(backupIndex);
+                BlockModifierManager.blockContainers(__instance).add(0, specificContainerToReduce);
             }
             if (!isStartTurnLostBlock) {
-                for (AbstractCustomBlockType b : CustomBlockManager.blockTypes(__instance)) {
-                    effectiveAmount = Math.max(1, b.damageReducedPerBlockUsed());
-                    removedAmount = Math.min((int)Math.ceil((double)tmp/effectiveAmount), b.currentAmount);
-                    b.currentAmount -= removedAmount;
-                    if (b != specificBlockToReduce) {
-                        b.onThisBlockDamaged(workingInfo, removedAmount);
+                for (BlockContainer b : BlockModifierManager.blockContainers(__instance)) {
+                    //effectiveAmount = Math.max(1, b.damageReducedPerBlockUsed());
+                    //removedAmount = Math.min((int)Math.ceil((double)tmp/effectiveAmount), b.currentAmount);
+                    removedAmount = Math.min(tmp, b.getBlockAmount());
+                    b.setBlockAmount(b.getBlockAmount() - removedAmount);
+                    if (b != specificContainerToReduce) {
+                        for (AbstractBlockModifier m : b.getBlockTypes()) {
+                            m.onThisBlockDamaged(workingInfo, removedAmount);
+                        }
                     }
-                    tmp -= removedAmount*effectiveAmount;
-                    reduction += removedAmount*(1-effectiveAmount);
-                    if (b.currentAmount <= 0) {
-                        int delta = b.onRemove(false, workingInfo, tmp);
-                        tmp -= delta;
-                        reduction += delta;
+                    tmp -= removedAmount;
+                    //reduction += removedAmount*(1-effectiveAmount);
+                    if (b.getBlockAmount() <= 0) {
+                        int d = tmp;
+                        for (AbstractBlockModifier m : b.getBlockTypes()) {
+                            d = m.onRemove(false, workingInfo, d);
+                        }
+                        reduction += tmp - d;
+                        tmp = d;
                         if (reduction > tmp) {
                             reduction = tmp;
                         }
@@ -90,12 +102,12 @@ public class CustomBlockPatches {
                     }
                 }
             }
-            if (specificBlockToReduce != null) {
-                CustomBlockManager.blockTypes(__instance).remove(0);
-                CustomBlockManager.blockTypes(__instance).add(backupIndex, specificBlockToReduce);
-                specificBlockToReduce = null;
+            if (specificContainerToReduce != null) {
+                BlockModifierManager.blockContainers(__instance).remove(0);
+                BlockModifierManager.blockContainers(__instance).add(backupIndex, specificContainerToReduce);
+                specificContainerToReduce = null;
             }
-            CustomBlockManager.removeEmptyBlockTypes(__instance);
+            BlockModifierManager.removeEmptyBlockContainers(__instance);
             amount[0] -= reduction;
             if (amount[0] < 0) {
                 amount[0] = 0;
@@ -107,11 +119,34 @@ public class CustomBlockPatches {
     public static class AddBlockMakePlaceHolderIfNeeded {
         @SpireInsertPatch(locator = CreatureAddBlockLocator.class, localvars = "tmp")
         public static void pls(AbstractCreature __instance, int amount, float tmp) {
-            if (isNormalBlock) {
-                CustomBlockManager.addBlockMakePlaceHolderIfNeeded(__instance, tmp);
-            } else {
-                isNormalBlock = true;
+            //Define a new arraylist
+            ArrayList<AbstractBlockModifier> blockTypes = new ArrayList<>();
+            //Grab the action currently running, as this is what was processing when our block method was called
+            AbstractGameAction a = AbstractDungeon.actionManager.currentAction;
+            if (a != null) {
+                //If the action is not null, see if it has an instigator object
+                Object o = BlockModifierManager.BoundGameAction.boundBlockObject.get(a);
+                if (o != null) {
+                    //If so, this is our bound object to grab DamageMods off
+                    for (AbstractBlockModifier m : BlockModifierManager.modifiers(o)) {
+                        blockTypes.add(m.makeCopy());
+                    }
+                }
             }
+            if (boundObject != null) {
+                for (AbstractBlockModifier m : BlockModifierManager.modifiers(boundObject)) {
+                    blockTypes.add(m.makeCopy());
+                }
+                boundObject = null;
+            }
+            for (AbstractPower p : __instance.powers) {
+                if (p instanceof OnCreateBlockContainerPower) {
+                    ((OnCreateBlockContainerPower) p).onCreateBlockContainer(blockTypes);
+                }
+            }
+            Collections.sort(blockTypes);
+            BlockContainer b = new BlockContainer(__instance, (int)tmp, blockTypes);
+            BlockModifierManager.addBlockContainer(__instance, b);
         }
     }
 
@@ -120,10 +155,10 @@ public class CustomBlockPatches {
         @SpirePrefixPatch()
         public static void OnAttackedAndSaveInfo(AbstractCreature __instance, DamageInfo info, int damageAmount) {
             workingInfo = info;
-            CustomBlockManager.onAttacked(__instance, info, damageAmount);
+            BlockModifierManager.onAttacked(__instance, info, damageAmount);
         }
 
-        @SpirePrefixPatch()
+        @SpirePostfixPatch()
         public static void removeInfo(AbstractCreature __instance, DamageInfo info, int damageAmount) {
             workingInfo = null;
         }
@@ -133,42 +168,42 @@ public class CustomBlockPatches {
     public static class PlayerDamageGivePatches {
         @SpireInsertPatch(locator = PlayerDamageGiveLocator.class, localvars = "tmp")
         public static void singleGive(AbstractCard __instance, AbstractMonster mo, @ByRef float[] tmp) {
-            tmp[0] = CustomBlockManager.atDamageGive(AbstractDungeon.player, tmp[0], __instance.damageTypeForTurn, mo, __instance);
+            tmp[0] = BlockModifierManager.atDamageGive(AbstractDungeon.player, tmp[0], __instance.damageTypeForTurn, mo, __instance);
         }
 
         @SpireInsertPatch(locator = PlayerMultiDamageGiveLocator.class, localvars = {"tmp","i"})
         public static void multiGive(AbstractCard __instance, AbstractMonster mo, float[] tmp, int i) {
-            tmp[i] = CustomBlockManager.atDamageGive(AbstractDungeon.player, tmp[i], __instance.damageTypeForTurn, AbstractDungeon.getMonsters().monsters.get(i), __instance);
+            tmp[i] = BlockModifierManager.atDamageGive(AbstractDungeon.player, tmp[i], __instance.damageTypeForTurn, AbstractDungeon.getMonsters().monsters.get(i), __instance);
         }
 
         @SpireInsertPatch(locator = PlayerDamageFinalGiveLocator.class, localvars = "tmp")
         public static void singleFinalGive(AbstractCard __instance, AbstractMonster mo, @ByRef float[] tmp) {
-            tmp[0] = CustomBlockManager.atDamageFinalGive(AbstractDungeon.player, tmp[0], __instance.damageTypeForTurn, mo, __instance);
+            tmp[0] = BlockModifierManager.atDamageFinalGive(AbstractDungeon.player, tmp[0], __instance.damageTypeForTurn, mo, __instance);
         }
 
         @SpireInsertPatch(locator = PlayerMultiDamageFinalGiveLocator.class, localvars = {"tmp","i"})
         public static void multiFinalGive(AbstractCard __instance, AbstractMonster mo, float[] tmp, int i) {
-            tmp[i] = CustomBlockManager.atDamageFinalGive(AbstractDungeon.player, tmp[i], __instance.damageTypeForTurn, AbstractDungeon.getMonsters().monsters.get(i), __instance);
+            tmp[i] = BlockModifierManager.atDamageFinalGive(AbstractDungeon.player, tmp[i], __instance.damageTypeForTurn, AbstractDungeon.getMonsters().monsters.get(i), __instance);
         }
 
         @SpireInsertPatch(locator = MonsterDamageReceiveLocator.class, localvars = "tmp")
         public static void singleReceive(AbstractCard __instance, AbstractMonster mo, @ByRef float[] tmp) {
-            tmp[0] = CustomBlockManager.atDamageReceive(mo, tmp[0], __instance.damageTypeForTurn, AbstractDungeon.player);
+            tmp[0] = BlockModifierManager.atDamageReceive(mo, tmp[0], __instance.damageTypeForTurn, AbstractDungeon.player);
         }
 
         @SpireInsertPatch(locator = MonsterMultiDamageReceiveLocator.class, localvars = {"tmp","i"})
         public static void multiReceive(AbstractCard __instance, AbstractMonster mo, float[] tmp, int i) {
-            tmp[i] = CustomBlockManager.atDamageReceive(AbstractDungeon.getMonsters().monsters.get(i), tmp[i], __instance.damageTypeForTurn, AbstractDungeon.player);
+            tmp[i] = BlockModifierManager.atDamageReceive(AbstractDungeon.getMonsters().monsters.get(i), tmp[i], __instance.damageTypeForTurn, AbstractDungeon.player);
         }
 
         @SpireInsertPatch(locator = MonsterDamageFinalReceiveLocator.class, localvars = "tmp")
         public static void singleFinalReceive(AbstractCard __instance, AbstractMonster mo, @ByRef float[] tmp) {
-            tmp[0] = CustomBlockManager.atDamageFinalReceive(mo, tmp[0], __instance.damageTypeForTurn, AbstractDungeon.player);
+            tmp[0] = BlockModifierManager.atDamageFinalReceive(mo, tmp[0], __instance.damageTypeForTurn, AbstractDungeon.player);
         }
 
         @SpireInsertPatch(locator = MonsterMultiDamageFinalReceiveLocator.class, localvars = {"tmp","i"})
         public static void multiFinalReceive(AbstractCard __instance, AbstractMonster mo, float[] tmp, int i) {
-            tmp[i] = CustomBlockManager.atDamageFinalReceive(AbstractDungeon.getMonsters().monsters.get(i), tmp[i], __instance.damageTypeForTurn, AbstractDungeon.player);
+            tmp[i] = BlockModifierManager.atDamageFinalReceive(AbstractDungeon.getMonsters().monsters.get(i), tmp[i], __instance.damageTypeForTurn, AbstractDungeon.player);
         }
 
 
@@ -178,15 +213,19 @@ public class CustomBlockPatches {
     public static class ApplyPowersToBlock {
         @SpireInsertPatch(locator = BlockLocator.class, localvars = {"tmp"})
         public static void blockInsert(AbstractCard __instance, @ByRef float[] tmp) {
-            for (AbstractCustomBlockType b : CustomBlockManager.blockTypes(AbstractDungeon.player)) {
-                tmp[0] = b.onModifyBlock(tmp[0], __instance);
+            for (BlockContainer b : BlockModifierManager.blockContainers(AbstractDungeon.player)) {
+                for (AbstractBlockModifier m : b.getBlockTypes()) {
+                    tmp[0] = m.onModifyBlock(tmp[0], __instance);
+                }
             }
         }
 
         @SpireInsertPatch(locator = BlockFinalLocator.class, localvars = {"tmp"})
         public static void blockFinalInsert(AbstractCard __instance, @ByRef float[] tmp) {
-            for (AbstractCustomBlockType b : CustomBlockManager.blockTypes(AbstractDungeon.player)) {
-                tmp[0] = b.onModifyBlockFinal(tmp[0], __instance);
+            for (BlockContainer b : BlockModifierManager.blockContainers(AbstractDungeon.player)) {
+                for (AbstractBlockModifier m : b.getBlockTypes()) {
+                    tmp[0] = m.onModifyBlockFinal(tmp[0], __instance);
+                }
             }
         }
     }
@@ -195,39 +234,34 @@ public class CustomBlockPatches {
     public static class PlayerDamageReceivePatches {
         @SpireInsertPatch(locator = PlayerDamageReceiveLocator.class, localvars = {"tmp"})
         public static void receive(AbstractMonster __instance, @ByRef float[] tmp) {
-            tmp[0] = CustomBlockManager.atDamageReceive(AbstractDungeon.player, tmp[0], DamageInfo.DamageType.NORMAL, __instance);
+            tmp[0] = BlockModifierManager.atDamageReceive(AbstractDungeon.player, tmp[0], DamageInfo.DamageType.NORMAL, __instance);
         }
 
         @SpireInsertPatch(locator = PlayerDamageFinalReceiveLocator.class, localvars = {"tmp"})
         public static void finalReceive(AbstractMonster __instance, @ByRef float[] tmp) {
-            tmp[0] = CustomBlockManager.atDamageFinalReceive(AbstractDungeon.player, tmp[0], DamageInfo.DamageType.NORMAL, __instance);
+            tmp[0] = BlockModifierManager.atDamageFinalReceive(AbstractDungeon.player, tmp[0], DamageInfo.DamageType.NORMAL, __instance);
         }
 
         @SpireInsertPatch(locator = MonsterDamageGiveLocator.class, localvars = {"tmp"})
         public static void give(AbstractMonster __instance, @ByRef float[] tmp) {
-            tmp[0] = CustomBlockManager.atDamageGive(__instance, tmp[0], DamageInfo.DamageType.NORMAL, AbstractDungeon.player, null);
+            tmp[0] = BlockModifierManager.atDamageGive(__instance, tmp[0], DamageInfo.DamageType.NORMAL, AbstractDungeon.player, null);
         }
 
         @SpireInsertPatch(locator = MonsterDamageFinalGiveLocator.class, localvars = {"tmp"})
         public static void finalGive(AbstractMonster __instance, @ByRef float[] tmp) {
-            tmp[0] = CustomBlockManager.atDamageFinalGive(__instance, tmp[0], DamageInfo.DamageType.NORMAL, AbstractDungeon.player, null);
+            tmp[0] = BlockModifierManager.atDamageFinalGive(__instance, tmp[0], DamageInfo.DamageType.NORMAL, AbstractDungeon.player, null);
         }
     }
 
-    @SpirePatch2(clz = AbstractPlayer.class, method = "renderPowerTips")
-    public static class RenderBlockTooltip {
-        @SpireInsertPatch(locator = Locator.class, localvars = {"tips"})
-        public static void patch(AbstractPlayer __instance, ArrayList<PowerTip> tips) {
-            if (__instance.hasPower(BlockTipPower.POWER_ID)) {
-                tips.add(new PowerTip(__instance.getPower(BlockTipPower.POWER_ID).name, __instance.getPower(BlockTipPower.POWER_ID).description));
+    @SpirePatch(clz = AbstractCard.class, method = "makeStatEquivalentCopy")
+    public static class MakeStatEquivalentCopy {
+        public static AbstractCard Postfix(AbstractCard result, AbstractCard self) {
+            for (AbstractBlockModifier mod : BlockModifierManager.modifiers(self)) {
+                if (!mod.isInnate()) {
+                    BlockModifierManager.addModifier(result, mod);
+                }
             }
-        }
-
-        private static class Locator extends SpireInsertLocator {
-            public int[] Locate(CtBehavior ctMethodToPatch) throws CannotCompileException, PatchingException {
-                Matcher finalMatcher = new Matcher.FieldAccessMatcher(AbstractPlayer.class, "stance");
-                return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
-            }
+            return result;
         }
     }
 

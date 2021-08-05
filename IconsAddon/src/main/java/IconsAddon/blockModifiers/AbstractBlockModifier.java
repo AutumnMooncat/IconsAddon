@@ -1,6 +1,9 @@
 package IconsAddon.blockModifiers;
 
-import IconsAddon.util.CustomBlockManager;
+import IconsAddon.util.BlockContainer;
+import IconsAddon.util.BlockModifierManager;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.megacrit.cardcrawl.actions.AbstractGameAction;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
@@ -9,17 +12,26 @@ import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import com.megacrit.cardcrawl.powers.AbstractPower;
 
-public abstract class AbstractCustomBlockType implements Comparable<AbstractCustomBlockType>{
+public abstract class AbstractBlockModifier implements Comparable<AbstractBlockModifier>{
+    public enum Priority{
+        NORMAL,
+        TOP,
+        BOTTOM
+    }
     public AbstractCreature owner;
-    public int currentAmount;
+    public BlockContainer container;
 
-    public AbstractCustomBlockType(AbstractCreature owner, int amount) {
+    public AbstractBlockModifier() {}
+
+    public void setContainer(BlockContainer container) {
+        this.container = container;
+    }
+    public void setOwner(AbstractCreature owner) {
         this.owner = owner;
-        this.currentAmount = amount;
     }
 
     public int amountLostAtStartOfTurn() {
-        return currentAmount;
+        return getCurrentAmount();
     }
 
     public float onModifyBlock(float block, AbstractCard card) {
@@ -78,6 +90,10 @@ public abstract class AbstractCustomBlockType implements Comparable<AbstractCust
         return true;
     }
 
+    public boolean isInnate() {
+        return true;
+    }
+
     public boolean onApplyPower(AbstractPower abstractPower, AbstractCreature target, AbstractCreature source) {
         return true;
     }
@@ -106,21 +122,43 @@ public abstract class AbstractCustomBlockType implements Comparable<AbstractCust
         AbstractDungeon.actionManager.addToBottom(action);
     }
 
-    protected void reduceThisBlock(int amount) {
-        CustomBlockManager.reduceSpecificBlockType(this, amount);
+    protected void reduceThisBlockContainer(int amount) {
+        BlockModifierManager.reduceSpecificBlockType(container, amount);
     }
 
-    protected void removeThisBlock() {
-        CustomBlockManager.removeSpecificBlockType(this);
+    protected void removeThisBlockContainer() {
+        BlockModifierManager.removeSpecificBlockType(container);
     }
 
-    public int priority() {
+    protected int getCurrentAmount() {
+        return container.getBlockAmount();
+    }
+
+    public Priority priority() {
+        return Priority.NORMAL;
+    }
+
+    public int subPriority() {
         return 0;
     }
 
-    @Override
-    public int compareTo(AbstractCustomBlockType other) {
-        return this.priority() - other.priority();
+    public Texture customBlockImage() {
+        return null;
     }
+
+    public Color blockImageColor() {
+        return null;
+    }
+
+    public Color blockTextColor() {
+        return null;
+    }
+
+    @Override
+    public int compareTo(AbstractBlockModifier other) {
+        return this.subPriority() - other.subPriority();
+    }
+
+    public abstract AbstractBlockModifier makeCopy();
 
 }
