@@ -1,6 +1,7 @@
 package IconsAddon.util;
 
 import IconsAddon.damageModifiers.AbstractDamageModifier;
+import basemod.abstracts.CustomSavable;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import com.megacrit.cardcrawl.actions.AbstractGameAction;
@@ -10,9 +11,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
-public class DamageModifierManager {
+public class DamageModifierManager implements CustomSavable<Boolean> {
 
-    private static final HashMap<Object, ArrayList<AbstractDamageModifier>> boundObjects = new HashMap<>();
+    private static final HashMap<Object, ArrayList<AbstractDamageModifier>> boundDamageObjects = new HashMap<>();
+
+    @Override
+    public Boolean onSave() {
+        return true;
+    }
+
+    @Override
+    public void onLoad(Boolean aBoolean) {
+        boundDamageObjects.clear();
+    }
 
     @SpirePatch(clz = DamageInfo.class, method = SpirePatch.CLASS)
     private static class BoundDamageInfo {
@@ -52,45 +63,45 @@ public class DamageModifierManager {
 
     @SpirePatch(clz = AbstractGameAction.class, method = SpirePatch.CLASS)
     public static class BoundGameAction {
-        public static SpireField<Object> boundObject = new SpireField<>(() -> null);
+        public static SpireField<Object> boundDamageObject = new SpireField<>(() -> null);
     }
 
     public static void addModifier(Object object, AbstractDamageModifier damageMod) {
-        if (!boundObjects.containsKey(object)) {
-            boundObjects.put(object, new ArrayList<>());
+        if (!boundDamageObjects.containsKey(object)) {
+            boundDamageObjects.put(object, new ArrayList<>());
         }
-        boundObjects.get(object).add(damageMod);
-        Collections.sort(boundObjects.get(object));
+        boundDamageObjects.get(object).add(damageMod);
+        Collections.sort(boundDamageObjects.get(object));
     }
 
     public static void addModifiers(Object object, ArrayList<AbstractDamageModifier> damageMods) {
-        if (!boundObjects.containsKey(object)) {
-            boundObjects.put(object, new ArrayList<>());
+        if (!boundDamageObjects.containsKey(object)) {
+            boundDamageObjects.put(object, new ArrayList<>());
         }
-        boundObjects.get(object).addAll(damageMods);
-        Collections.sort(boundObjects.get(object));
+        boundDamageObjects.get(object).addAll(damageMods);
+        Collections.sort(boundDamageObjects.get(object));
     }
 
     public static ArrayList<AbstractDamageModifier> modifiers(Object object) {
-        return boundObjects.getOrDefault(object, new ArrayList<>());
+        return boundDamageObjects.getOrDefault(object, new ArrayList<>());
     }
 
     public static void removeModifier(Object object, AbstractDamageModifier damageMod) {
-        if (boundObjects.containsKey(object)) {
-            boundObjects.get(object).remove(damageMod);
-            Collections.sort(boundObjects.get(object));
+        if (boundDamageObjects.containsKey(object)) {
+            boundDamageObjects.get(object).remove(damageMod);
+            Collections.sort(boundDamageObjects.get(object));
         }
     }
 
     public static void removeModifiers(Object object, ArrayList<AbstractDamageModifier> damageMods) {
-        if (boundObjects.containsKey(object)) {
-            boundObjects.get(object).removeAll(damageMods);
-            Collections.sort(boundObjects.get(object));
+        if (boundDamageObjects.containsKey(object)) {
+            boundDamageObjects.get(object).removeAll(damageMods);
+            Collections.sort(boundDamageObjects.get(object));
         }
     }
 
     public static void removeAllModifiers(Object object) {
-        boundObjects.remove(object);
+        boundDamageObjects.remove(object);
     }
 
 }
