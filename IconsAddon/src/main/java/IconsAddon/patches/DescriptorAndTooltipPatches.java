@@ -22,7 +22,7 @@ public class DescriptorAndTooltipPatches {
     public static class AddTooltipTop {
         @SpireInsertPatch(locator = Locator1.class, localvars = "tooltips")
         public static void part1(AbstractCard ___card, @ByRef List<TooltipInfo>[] tooltips) {
-            if (DamageModifierManager.modifiers(___card).size() > 0 && tooltips[0] == null) {
+            if ((DamageModifierManager.modifiers(___card).size() > 0 || BlockModifierManager.modifiers(___card).size() > 0) && tooltips[0] == null) {
                 tooltips[0] = new ArrayList<>();
             }
             for (AbstractDamageModifier mod : DamageModifierManager.modifiers(___card)) {
@@ -46,7 +46,7 @@ public class DescriptorAndTooltipPatches {
 
         @SpireInsertPatch(locator = Locator2.class, localvars = "tooltips")
         public static void part2(AbstractCard ___card, @ByRef List<TooltipInfo>[] tooltips) {
-            if (DamageModifierManager.modifiers(___card).size() > 0 && tooltips[0] == null) {
+            if ((DamageModifierManager.modifiers(___card).size() > 0 || BlockModifierManager.modifiers(___card).size() > 0) && tooltips[0] == null) {
                 tooltips[0] = new ArrayList<>();
             }
             for (AbstractDamageModifier mod : DamageModifierManager.modifiers(___card)) {
