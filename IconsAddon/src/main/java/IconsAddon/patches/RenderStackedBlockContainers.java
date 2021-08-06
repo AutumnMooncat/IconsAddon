@@ -50,7 +50,7 @@ public class RenderStackedBlockContainers {
                     sb.setColor(___blockOutlineColor);
                 }
                 sb.draw(b.getBlockImage(), x + ___BLOCK_ICON_X - 32.0F - dx, y + ___BLOCK_ICON_Y - 32.0F + offsetY +___blockOffset, 32.0F, 32.0F, 64.0F, 64.0F, Settings.scale, Settings.scale, 0.0F, 0, 0, 64, 64, false, false);
-                FontHelper.renderFontCentered(sb, FontHelper.blockInfoFont, Integer.toString(b.getBlockAmount()), x + ___BLOCK_ICON_X - dx * Settings.scale, y - (16.0F - offsetY) * Settings.scale, b.getTextColor()!=null?b.getTextColor():___blockTextColor, ___blockScale);
+                FontHelper.renderFontCentered(sb, FontHelper.blockInfoFont, Integer.toString(b.getBlockAmount()), x + ___BLOCK_ICON_X - dx, y + offsetY - 16.0F * Settings.scale, b.getTextColor()!=null?b.getTextColor():___blockTextColor, ___blockScale);
                 offsetY += dy;
             }
             BlockStackElement e = BlockStackElementField.element.get(__instance);
