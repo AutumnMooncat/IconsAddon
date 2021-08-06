@@ -10,20 +10,25 @@ public class AddIconToDescriptionMod extends AbstractCardModifier {
     public static final String MAGIC = "!M!";
 
     final String searchString;
-    final AbstractCustomIcon icon;
+    final String iconCode;
 
     public AddIconToDescriptionMod(String searchString, AbstractCustomIcon icon) {
         this.searchString = searchString;
-        this.icon = icon;
+        this.iconCode = icon.cardCode();
+    }
+
+    public AddIconToDescriptionMod(String searchString, String iconCode) {
+        this.searchString = searchString;
+        this.iconCode = iconCode;
     }
 
     @Override
     public String modifyDescription(String rawDescription, AbstractCard card) {
-        return rawDescription.replace(searchString, searchString+" "+icon.cardCode());
+        return rawDescription.replace(searchString, searchString+" "+iconCode);
     }
 
     @Override
     public AbstractCardModifier makeCopy() {
-        return new AddIconToDescriptionMod(searchString, icon);
+        return new AddIconToDescriptionMod(searchString, iconCode);
     }
 }

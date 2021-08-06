@@ -11,8 +11,6 @@ public abstract class AbstractCustomIcon {
     protected static final int RENDER_SIZE = 24;
     public static final String CODE_ENDING = "Icon]";
 
-    public AbstractCustomIcon() {}
-
     public String cardCode() {
         return "[" + name() + CODE_ENDING;
     }
