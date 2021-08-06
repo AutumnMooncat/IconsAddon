@@ -10,6 +10,13 @@ import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import java.util.ArrayList;
 
 public abstract class AbstractDamageModifier implements Comparable<AbstractDamageModifier> {
+    public int priority = 0;
+    public boolean automaticBindingForCards = true;
+
+    public boolean isInherent() {
+        return false;
+    }
+
     public boolean ignoresBlock() {
         return false;
     }
@@ -46,14 +53,6 @@ public abstract class AbstractDamageModifier implements Comparable<AbstractDamag
         return false;
     }
 
-    public int priority() {
-        return 0;
-    }
-
-    public boolean isInnate() {
-        return true;
-    }
-
     protected void addToTop(AbstractGameAction action) {
         AbstractDungeon.actionManager.addToTop(action);
     }
@@ -64,6 +63,6 @@ public abstract class AbstractDamageModifier implements Comparable<AbstractDamag
 
     @Override
     public int compareTo(AbstractDamageModifier other) {
-        return this.priority() - other.priority();
+        return this.priority - other.priority;
     }
 }
