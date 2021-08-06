@@ -44,7 +44,6 @@ public class BlockModifierManager {
         }
         if (!stacked) {
             for (AbstractBlockModifier t : container.getBlockTypes()) {
-                t.setOwner(owner);
                 t.onApplication();
             }
             BlockTypes.blockContainers.get(owner).add(0, container);

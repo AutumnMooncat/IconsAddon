@@ -28,6 +28,7 @@ public class BlockContainer implements Comparable<BlockContainer> {
         this.blockAmount = blockAmount;
         this.containedBlockTypes = blockTypes;
         for (AbstractBlockModifier m : containedBlockTypes) {
+            m.setOwner(owner);
             m.setContainer(this);
             if (m.blockImageColor() != null) {
                 blockColor = m.blockImageColor();
