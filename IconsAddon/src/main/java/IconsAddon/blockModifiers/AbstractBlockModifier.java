@@ -2,6 +2,7 @@ package IconsAddon.blockModifiers;
 
 import IconsAddon.util.BlockContainer;
 import IconsAddon.util.BlockModifierManager;
+import basemod.helpers.TooltipInfo;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.megacrit.cardcrawl.actions.AbstractGameAction;
@@ -11,6 +12,8 @@ import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import com.megacrit.cardcrawl.powers.AbstractPower;
+
+import java.util.ArrayList;
 
 public abstract class AbstractBlockModifier implements Comparable<AbstractBlockModifier>{
     public enum Priority{
@@ -144,6 +147,14 @@ public abstract class AbstractBlockModifier implements Comparable<AbstractBlockM
 
     public Color blockTextColor() {
         return null;
+    }
+
+    public String getCardDescriptor() {
+        return null;
+    }
+
+    public ArrayList<TooltipInfo> getCustomTooltips() {
+        return new ArrayList<>();
     }
 
     @Override
