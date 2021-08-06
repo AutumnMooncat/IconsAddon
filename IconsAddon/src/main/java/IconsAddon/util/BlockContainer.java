@@ -64,9 +64,9 @@ public class BlockContainer implements Comparable<BlockContainer> {
 
     public int computeStartTurnBlockLoss() {
         int ret = blockAmount;
-        for (AbstractBlockModifier t : containedBlockTypes) {
-            if (t.amountLostAtStartOfTurn() < ret) {
-                ret = t.amountLostAtStartOfTurn();
+        for (AbstractBlockModifier m : containedBlockTypes) {
+            if (m.amountLostAtStartOfTurn() < ret) {
+                ret = m.amountLostAtStartOfTurn();
             }
         }
         return ret;
@@ -94,8 +94,8 @@ public class BlockContainer implements Comparable<BlockContainer> {
             sb.append(containedBlockTypes.get(0).getDescription());
         } else {
             int i = 0;
-            for (AbstractBlockModifier b : containedBlockTypes) {
-                sb.append(b.getName()).append(" - ").append(b.getDescription());
+            for (AbstractBlockModifier m : containedBlockTypes) {
+                sb.append(m.getName()).append(" - ").append(m.getDescription());
                 if (++i < containedBlockTypes.size()) {
                     sb.append(" NL ");
                 }
@@ -106,10 +106,10 @@ public class BlockContainer implements Comparable<BlockContainer> {
 
     public int computePriority() {
         int ret = 0;
-        for (AbstractBlockModifier t : containedBlockTypes) {
-            if (t.priority() == AbstractBlockModifier.Priority.TOP) {
+        for (AbstractBlockModifier m : containedBlockTypes) {
+            if (m.priority() == AbstractBlockModifier.Priority.TOP) {
                 ret--;
-            } else if (t.priority() == AbstractBlockModifier.Priority.BOTTOM) {
+            } else if (m.priority() == AbstractBlockModifier.Priority.BOTTOM) {
                 ret++;
             }
         }
@@ -118,11 +118,11 @@ public class BlockContainer implements Comparable<BlockContainer> {
 
     public boolean containsSameBlockTypes(BlockContainer b) {
         ArrayList<Class<?>> comp = new ArrayList<>();
-        for (AbstractBlockModifier t : containedBlockTypes) {
-            comp.add(t.getClass());
+        for (AbstractBlockModifier m : containedBlockTypes) {
+            comp.add(m.getClass());
         }
-        for (AbstractBlockModifier t : b.containedBlockTypes) {
-            if (!comp.remove(t.getClass())) {
+        for (AbstractBlockModifier m : b.containedBlockTypes) {
+            if (!comp.remove(m.getClass())) {
                 return false;
             }
         }
@@ -131,8 +131,8 @@ public class BlockContainer implements Comparable<BlockContainer> {
 
     public boolean shouldStack() {
         boolean ret = true;
-        for (AbstractBlockModifier t : containedBlockTypes) {
-            ret &= t.shouldStack();
+        for (AbstractBlockModifier m : containedBlockTypes) {
+            ret &= m.shouldStack();
         }
         return ret;
     }
