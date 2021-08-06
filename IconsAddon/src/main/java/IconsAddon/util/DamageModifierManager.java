@@ -4,16 +4,17 @@ import IconsAddon.damageModifiers.AbstractDamageModifier;
 import basemod.abstracts.CustomSavable;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
-import com.megacrit.cardcrawl.actions.AbstractGameAction;
+import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 
 public class DamageModifierManager implements CustomSavable<Boolean> {
 
-    private static final HashMap<Object, ArrayList<AbstractDamageModifier>> boundDamageObjects = new HashMap<>();
+    private static final HashMap<Object, List<AbstractDamageModifier>> boundDamageObjects = new HashMap<>();
 
     @Override
     public Boolean onSave() {
@@ -27,43 +28,32 @@ public class DamageModifierManager implements CustomSavable<Boolean> {
 
     @SpirePatch(clz = DamageInfo.class, method = SpirePatch.CLASS)
     private static class BoundDamageInfo {
-        public static final SpireField<Object> boundObject = new SpireField<>(() -> null);
+        public static final SpireField<List<AbstractDamageModifier>> boundDamageMods = new SpireField<>(ArrayList::new);
+        public static final SpireField<AbstractCard> instigatorCard = new SpireField<>(() -> null);
     }
 
-    /**
-     * Gets the bound object for the provided DamageInfo
-     * @param info The DamageInfo to lookup the bound object for
-     * @return The object bound to this DamageInfo. Will be null if no object is bound
-     */
-    public static Object getBoundObject(DamageInfo info) {
-        return BoundDamageInfo.boundObject.get(info);
+    public static List<AbstractDamageModifier> getDamageMods(DamageInfo info) {
+        return BoundDamageInfo.boundDamageMods.get(info);
     }
 
-    /**
-     * Binds the object to the DamageInfo is no object is bound. If an object is already bound, adds the modifiers of the new object to the bound object. Should be used in most cases in case multiple mods attempt to bind different damages via patches.
-     * @param info The DamageInfo to bind the object to
-     * @param object The object to bind to the DamageInfo. This associates all DamageModifiers on the object to the DamageInfo
-     */
-    public static void spliceBoundObject(DamageInfo info, Object object) {
-        if (BoundDamageInfo.boundObject.get(info) == null) {
-            BoundDamageInfo.boundObject.set(info, object);
-        } else {
-            DamageModifierManager.addModifiers(BoundDamageInfo.boundObject.get(info), DamageModifierManager.modifiers(object));
+    public static AbstractCard getInstigatorCard(DamageInfo info) {
+        return BoundDamageInfo.instigatorCard.get((info));
+    }
+
+    public static void bindInstigatorCard(DamageInfo info, AbstractCard c) {
+        BoundDamageInfo.instigatorCard.set(info, c);
+    }
+
+    public static void bindDamageModsFromObject(DamageInfo info, Object object) {
+        bindDamageMods(info, boundDamageObjects.get(object));
+    }
+
+    public static void bindDamageMods(DamageInfo info, List<AbstractDamageModifier> list) {
+        for (AbstractDamageModifier m : list) {
+            if (!BoundDamageInfo.boundDamageMods.get(info).contains(m)) {
+                BoundDamageInfo.boundDamageMods.get(info).add(m);
+            }
         }
-    }
-
-    /**
-     * Forcefully sets a new bound object to the DamageInfo. Not patch friendly, but may be needed in certain circumstances.
-     * @param info The DamageInfo to bind the object to
-     * @param object The object to bind to the DamageInfo. This associates all DamageModifiers on the object to the DamageInfo
-     */
-    public static void overwriteBoundObject(DamageInfo info, Object object) {
-        BoundDamageInfo.boundObject.set(info, object);
-    }
-
-    @SpirePatch(clz = AbstractGameAction.class, method = SpirePatch.CLASS)
-    public static class BoundGameAction {
-        public static SpireField<Object> boundDamageObject = new SpireField<>(() -> null);
     }
 
     public static void addModifier(Object object, AbstractDamageModifier damageMod) {
@@ -74,7 +64,7 @@ public class DamageModifierManager implements CustomSavable<Boolean> {
         Collections.sort(boundDamageObjects.get(object));
     }
 
-    public static void addModifiers(Object object, ArrayList<AbstractDamageModifier> damageMods) {
+    public static void addModifiers(Object object, List<AbstractDamageModifier> damageMods) {
         if (!boundDamageObjects.containsKey(object)) {
             boundDamageObjects.put(object, new ArrayList<>());
         }
@@ -82,8 +72,11 @@ public class DamageModifierManager implements CustomSavable<Boolean> {
         Collections.sort(boundDamageObjects.get(object));
     }
 
-    public static ArrayList<AbstractDamageModifier> modifiers(Object object) {
-        return boundDamageObjects.getOrDefault(object, new ArrayList<>());
+    public static List<AbstractDamageModifier> modifiers(Object object) {
+        if (boundDamageObjects.containsKey(object)) {
+            return boundDamageObjects.get(object);
+        }
+        return Collections.emptyList();
     }
 
     public static void removeModifier(Object object, AbstractDamageModifier damageMod) {
