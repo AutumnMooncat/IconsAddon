@@ -102,14 +102,6 @@ public abstract class AbstractBlockModifier implements Comparable<AbstractBlockM
         return stackAmount;
     }
 
-    public int damageReducedPerBlockUsed() {
-        return 1;
-    }
-
-    public boolean negatesRemainingDamageWhenBroken() {
-        return false;
-    }
-
     abstract public String getName();
 
     abstract public String getDescription();
