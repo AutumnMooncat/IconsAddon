@@ -73,7 +73,7 @@ public class BlockModifierPatches {
                 BlockModifierManager.blockContainers(__instance).remove(backupIndex);
                 BlockModifierManager.blockContainers(__instance).add(0, specificContainerToReduce);
             }
-            if (!isStartTurnLostBlock) {
+            if (!isStartTurnLostBlock && !RetainMonsterBlockPatches.monsterStartOfTurn) {
                 for (BlockContainer b : BlockModifierManager.blockContainers(__instance)) {
                     //effectiveAmount = Math.max(1, b.damageReducedPerBlockUsed());
                     //removedAmount = Math.min((int)Math.ceil((double)tmp/effectiveAmount), b.currentAmount);
