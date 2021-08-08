@@ -13,7 +13,7 @@ public class RetainMonsterBlockPatches {
     public static boolean monsterStartOfTurn = false;
 
     @SpirePatch(clz = MonsterGroup.class, method = "applyPreTurnLogic")
-    public static class SetMonsterLoseBlockFalg {
+    public static class SetMonsterLoseBlockFlag {
         @SpireInsertPatch(locator = Locator.class)
         public static void SetFlag(MonsterGroup __instance) {
             monsterStartOfTurn = true;
