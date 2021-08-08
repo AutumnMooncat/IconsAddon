@@ -23,6 +23,7 @@ public abstract class AbstractBlockModifier implements Comparable<AbstractBlockM
     }
     public AbstractCreature owner;
     public BlockContainer container;
+    public boolean automaticBindingForCards = true;
 
     public AbstractBlockModifier() {}
 
@@ -93,8 +94,8 @@ public abstract class AbstractBlockModifier implements Comparable<AbstractBlockM
         return true;
     }
 
-    public boolean isInnate() {
-        return true;
+    public boolean isInherent() {
+        return false;
     }
 
     public boolean onApplyPower(AbstractPower abstractPower, AbstractCreature target, AbstractCreature source) {
