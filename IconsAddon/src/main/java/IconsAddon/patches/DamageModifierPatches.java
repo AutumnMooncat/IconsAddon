@@ -89,10 +89,8 @@ public class DamageModifierPatches {
         }
         @SpirePostfixPatch()
         public static void removeModsAfterUse(AbstractPlayer __instance, DamageInfo info) {
-            //TODO no longer works, lol
-            Object obj = DamageModifierManager.getDamageMods(info);
-            if (obj != null) {
-                DamageModifierManager.modifiers(obj).removeIf(AbstractDamageModifier::removeWhenActivated);
+            if (DamageModifierManager.getInstigatorCard(info) != null) {
+                DamageModifierManager.modifiers(DamageModifierManager.getInstigatorCard(info)).removeIf(AbstractDamageModifier::removeWhenActivated);
             }
         }
     }
