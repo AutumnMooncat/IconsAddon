@@ -18,7 +18,6 @@ import javassist.CtBehavior;
 public class BlockModifierPatches {
 
     public static BlockContainer specificContainerToReduce = null;
-    public static DamageInfo workingInfo;
 
     @SpirePatch(clz = ModifyPlayerLoseBlock.class, method = "Prefix")
     public static class ModifyStartOfTurnBlockLossPatch {
@@ -38,7 +37,7 @@ public class BlockModifierPatches {
                     tmp -= removedAmount;
                     if (b.getBlockAmount() <= 0) {
                         for (AbstractBlockModifier m : b.getBlockTypes()) {
-                            tmp = m.onRemove(true, workingInfo, tmp);
+                            tmp = m.onRemove(true, null, tmp);
                         }
                     }
                     if (tmp <= 0) {
@@ -51,11 +50,12 @@ public class BlockModifierPatches {
         }
     }
 
-    @SpirePatch(clz = AbstractCreature.class, method = "loseBlock", paramtypez = {int.class, boolean.class})
-    public static class DecrementCustomBlockAmounts {
-        @SpirePrefixPatch
-        public static void pls(AbstractCreature __instance, @ByRef int[] amount) {
-            int tmp = amount[0];
+    @SpirePatch(clz = AbstractCreature.class, method = "decrementBlock")
+    public static class OnAttackPreBlockDamaged {
+        @SpirePrefixPatch()
+        public static void OnAttackedAndSaveInfo(AbstractCreature __instance, DamageInfo info, @ByRef int[] damageAmount) {
+            BlockModifierManager.onAttacked(__instance, info, damageAmount[0]);
+            int tmp = damageAmount[0];
             int removedAmount;
             boolean isStartTurnLostBlock = OnPlayerLoseBlockToggle.isEnabled;
             int backupIndex = -1;
@@ -74,7 +74,7 @@ public class BlockModifierPatches {
                     b.setBlockAmount(b.getBlockAmount() - removedAmount);
                     if (b != specificContainerToReduce) {
                         for (AbstractBlockModifier m : b.getBlockTypes()) {
-                            m.onThisBlockDamaged(workingInfo, removedAmount);
+                            m.onThisBlockDamaged(info, removedAmount);
                         }
                     }
                     tmp -= removedAmount;
@@ -82,13 +82,10 @@ public class BlockModifierPatches {
                     if (b.getBlockAmount() <= 0) {
                         int d = tmp;
                         for (AbstractBlockModifier m : b.getBlockTypes()) {
-                            d = m.onRemove(false, workingInfo, d);
+                            d = m.onRemove(false, info, d);
                         }
                         reduction += tmp - d;
                         tmp = d;
-                        if (reduction > tmp) {
-                            reduction = tmp;
-                        }
                     }
                     if (tmp <= 0 || reduction >= tmp) {
                         break;
@@ -101,24 +98,10 @@ public class BlockModifierPatches {
                 specificContainerToReduce = null;
             }
             BlockModifierManager.removeEmptyBlockContainers(__instance);
-            amount[0] -= reduction;
-            if (amount[0] < 0) {
-                amount[0] = 0;
+            damageAmount[0] -= reduction;
+            if (damageAmount[0] < 0) {
+                damageAmount[0] = 0;
             }
-        }
-    }
-
-    @SpirePatch(clz = AbstractCreature.class, method = "decrementBlock")
-    public static class OnAttackPreBlockDamaged {
-        @SpirePrefixPatch()
-        public static void OnAttackedAndSaveInfo(AbstractCreature __instance, DamageInfo info, int damageAmount) {
-            workingInfo = info;
-            BlockModifierManager.onAttacked(__instance, info, damageAmount);
-        }
-
-        @SpirePostfixPatch()
-        public static void removeInfo(AbstractCreature __instance, DamageInfo info, int damageAmount) {
-            workingInfo = null;
         }
     }
 
