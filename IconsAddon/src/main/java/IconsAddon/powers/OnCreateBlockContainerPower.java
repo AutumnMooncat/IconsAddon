@@ -1,9 +1,10 @@
 package IconsAddon.powers;
 
 import IconsAddon.blockModifiers.AbstractBlockModifier;
+import com.megacrit.cardcrawl.cards.AbstractCard;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 
 public interface OnCreateBlockContainerPower {
-    void onCreateBlockContainer(ArrayList<AbstractBlockModifier> blockTypes);
+    void onCreateBlockContainer(HashSet<AbstractBlockModifier> blockTypes, AbstractCard instigatorCard);
 }
