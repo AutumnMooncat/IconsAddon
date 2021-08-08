@@ -1,6 +1,7 @@
 package IconsAddon.util;
 
 import IconsAddon.blockModifiers.AbstractBlockModifier;
+import IconsAddon.patches.BindingPatches;
 import IconsAddon.patches.BlockModifierPatches;
 import IconsAddon.powers.BlockTipPower;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
@@ -24,11 +25,6 @@ public class BlockModifierManager {
     @SpirePatch(clz = AbstractCreature.class, method = SpirePatch.CLASS)
     private static class BlockTypes {
         public static SpireField<ArrayList<BlockContainer>> blockContainers = new SpireField<>(ArrayList::new);
-    }
-
-    @SpirePatch(clz = AbstractGameAction.class, method = SpirePatch.CLASS)
-    public static class BoundGameAction {
-        public static SpireField<Object> boundBlockObject = new SpireField<>(() -> null);
     }
 
     public static void addBlockContainer(AbstractCreature owner, BlockContainer container) {
@@ -98,8 +94,9 @@ public class BlockModifierManager {
     }
 
     public static void addCustomBlock(AbstractCreature owner, Object objectWithBlockMods, int amount) {
-        BlockModifierPatches.boundObject = objectWithBlockMods;
+        BindingPatches.directlyBoundBlockMods.addAll(modifiers(objectWithBlockMods));
         owner.addBlock(amount);
+        BindingPatches.directlyBoundBlockMods.clear();
     }
 
     public static ArrayList<BlockContainer> blockContainers(AbstractCreature owner) {

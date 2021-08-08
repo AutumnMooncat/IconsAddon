@@ -1,7 +1,7 @@
 package IconsAddon.util;
 
 import IconsAddon.damageModifiers.AbstractDamageModifier;
-import IconsAddon.patches.PassTempModsViaActionPatch;
+import IconsAddon.patches.BindingPatches;
 import com.megacrit.cardcrawl.actions.AbstractGameAction;
 import com.megacrit.cardcrawl.actions.common.DamageAllEnemiesAction;
 import com.megacrit.cardcrawl.actions.defect.DamageAllButOneEnemyAction;
@@ -14,12 +14,10 @@ import java.util.List;
 
 public class DamageModifierHelper {
 
-    public static Object bindingObject;
-
     public static DamageInfo makeBoundDamageInfo(Object objectWithDamageModifier, AbstractCreature damageSource, int base, DamageInfo.DamageType type) {
-        bindingObject = objectWithDamageModifier;
-        DamageInfo di = new DamageInfo(damageSource, base, type);
-        bindingObject = null;
+        BindingPatches.directlyBoundInstigator = objectWithDamageModifier;
+        DamageInfo di = makeBoundDamageInfoFromArray(DamageModifierManager.modifiers(objectWithDamageModifier), damageSource, base, type);
+        BindingPatches.directlyBoundInstigator = null;
         return di;
     }
 
@@ -28,11 +26,9 @@ public class DamageModifierHelper {
     }
 
     public static DamageInfo makeBoundDamageInfoFromArray(List<AbstractDamageModifier> mods, AbstractCreature damageSource, int base, DamageInfo.DamageType type) {
-        bindingObject = new Object();
-        DamageModifierManager.addModifiers(bindingObject, mods);
+        BindingPatches.directlyBoundDamageMods.addAll(mods);
         DamageInfo di = new DamageInfo(damageSource, base, type);
-        DamageModifierManager.removeAllModifiers(bindingObject);
-        bindingObject = null;
+        BindingPatches.directlyBoundDamageMods.clear();
         return di;
     }
 
@@ -41,43 +37,48 @@ public class DamageModifierHelper {
     }
 
     public static void bindAction(Object objectWithDamageModifier, AbstractGameAction action) {
-        PassTempModsViaActionPatch.BoundGameAction.boundDamageObject.set(action, objectWithDamageModifier);
+        BindingPatches.BoundGameAction.actionDelayedInstigator.set(action, objectWithDamageModifier);
+        bindActionFromArray(DamageModifierManager.modifiers(objectWithDamageModifier), action);
+    }
+
+    public static void bindActionFromArray(List<AbstractDamageModifier> mods, AbstractGameAction action) {
+        BindingPatches.BoundGameAction.actionDelayedDamageMods.get(action).addAll(mods);
     }
 
     public static DamageAllEnemiesAction makeModifiedDamageAllEnemiesAction(Object objectWithDamageModifier, AbstractCreature source, int[] amount, DamageInfo.DamageType type, AbstractGameAction.AttackEffect effect, boolean isFast) {
         DamageAllEnemiesAction action = new DamageAllEnemiesAction(source, amount, type, effect, isFast);
-        PassTempModsViaActionPatch.BoundGameAction.boundDamageObject.set(action, objectWithDamageModifier);
+        bindAction(objectWithDamageModifier, action);
         return action;
 
     }
 
     public static DamageAllEnemiesAction makeModifiedDamageAllEnemiesAction(Object objectWithDamageModifier, AbstractCreature source, int[] amount, DamageInfo.DamageType type, AbstractGameAction.AttackEffect effect) {
         DamageAllEnemiesAction action = new DamageAllEnemiesAction(source, amount, type, effect);
-        PassTempModsViaActionPatch.BoundGameAction.boundDamageObject.set(action, objectWithDamageModifier);
+        bindAction(objectWithDamageModifier, action);
         return action;
     }
 
     public static DamageAllEnemiesAction makeModifiedDamageAllEnemiesAction(Object objectWithDamageModifier, AbstractPlayer player, int baseDamage, DamageInfo.DamageType type, AbstractGameAction.AttackEffect effect) {
         DamageAllEnemiesAction action = new DamageAllEnemiesAction(player, baseDamage, type, effect);
-        PassTempModsViaActionPatch.BoundGameAction.boundDamageObject.set(action, objectWithDamageModifier);
+        bindAction(objectWithDamageModifier, action);
         return action;
     }
 
     public static DamageAllButOneEnemyAction makeModifiedDamageAllButOneEnemyAction(Object objectWithDamageModifier, AbstractCreature source, AbstractCreature target, int[] amount, DamageInfo.DamageType type, AbstractGameAction.AttackEffect effect, boolean isFast) {
         DamageAllButOneEnemyAction action = new DamageAllButOneEnemyAction(source, target, amount, type, effect, isFast);
-        PassTempModsViaActionPatch.BoundGameAction.boundDamageObject.set(action, objectWithDamageModifier);
+        bindAction(objectWithDamageModifier, action);
         return action;
     }
 
     public static DamageAllButOneEnemyAction makeModifiedDamageAllButOneEnemyAction(Object objectWithDamageModifier, AbstractCreature source, AbstractCreature target, int[] amount, DamageInfo.DamageType type, AbstractGameAction.AttackEffect effect) {
         DamageAllButOneEnemyAction action = new DamageAllButOneEnemyAction(source, target, amount, type, effect);
-        PassTempModsViaActionPatch.BoundGameAction.boundDamageObject.set(action, objectWithDamageModifier);
+        bindAction(objectWithDamageModifier, action);
         return action;
     }
 
     public static VampireDamageAllEnemiesAction makeModifiedVampireDamageAllEnemiesAction(Object objectWithDamageModifier, AbstractCreature source, int[] amount, DamageInfo.DamageType type, AbstractGameAction.AttackEffect effect) {
         VampireDamageAllEnemiesAction action = new VampireDamageAllEnemiesAction(source, amount, type, effect);
-        PassTempModsViaActionPatch.BoundGameAction.boundDamageObject.set(action, objectWithDamageModifier);
+        bindAction(objectWithDamageModifier, action);
         return action;
     }
 

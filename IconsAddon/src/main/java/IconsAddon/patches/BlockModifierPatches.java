@@ -1,31 +1,24 @@
 package IconsAddon.patches;
 
 import IconsAddon.blockModifiers.AbstractBlockModifier;
-import IconsAddon.powers.OnCreateBlockContainerPower;
 import IconsAddon.util.BlockContainer;
 import IconsAddon.util.BlockModifierManager;
 import basemod.patches.com.megacrit.cardcrawl.actions.GameActionManager.OnPlayerLoseBlockToggle;
 import basemod.patches.com.megacrit.cardcrawl.core.AbstractCreature.ModifyPlayerLoseBlock;
 import com.badlogic.gdx.math.MathUtils;
 import com.evacipated.cardcrawl.modthespire.lib.*;
-import com.megacrit.cardcrawl.actions.AbstractGameAction;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
-import com.megacrit.cardcrawl.powers.AbstractPower;
 import javassist.CtBehavior;
-
-import java.util.ArrayList;
-import java.util.Collections;
 
 public class BlockModifierPatches {
 
     public static BlockContainer specificContainerToReduce = null;
     public static DamageInfo workingInfo;
-    public static Object boundObject;
 
     @SpirePatch(clz = ModifyPlayerLoseBlock.class, method = "Prefix")
     public static class ModifyStartOfTurnBlockLossPatch {
@@ -112,41 +105,6 @@ public class BlockModifierPatches {
             if (amount[0] < 0) {
                 amount[0] = 0;
             }
-        }
-    }
-
-    @SpirePatch(clz = AbstractCreature.class, method = "addBlock")
-    public static class AddBlockMakePlaceHolderIfNeeded {
-        @SpireInsertPatch(locator = CreatureAddBlockLocator.class, localvars = "tmp")
-        public static void pls(AbstractCreature __instance, int amount, float tmp) {
-            //Define a new arraylist
-            ArrayList<AbstractBlockModifier> blockTypes = new ArrayList<>();
-            //Grab the action currently running, as this is what was processing when our block method was called
-            AbstractGameAction a = AbstractDungeon.actionManager.currentAction;
-            if (a != null) {
-                //If the action is not null, see if it has an instigator object
-                Object o = BlockModifierManager.BoundGameAction.boundBlockObject.get(a);
-                if (o != null) {
-                    //If so, this is our bound object to grab DamageMods off
-                    for (AbstractBlockModifier m : BlockModifierManager.modifiers(o)) {
-                        blockTypes.add(m.makeCopy());
-                    }
-                }
-            }
-            if (boundObject != null) {
-                for (AbstractBlockModifier m : BlockModifierManager.modifiers(boundObject)) {
-                    blockTypes.add(m.makeCopy());
-                }
-                boundObject = null;
-            }
-            for (AbstractPower p : __instance.powers) {
-                if (p instanceof OnCreateBlockContainerPower) {
-                    ((OnCreateBlockContainerPower) p).onCreateBlockContainer(blockTypes);
-                }
-            }
-            Collections.sort(blockTypes);
-            BlockContainer b = new BlockContainer(__instance, (int)tmp, blockTypes);
-            BlockModifierManager.addBlockContainer(__instance, b);
         }
     }
 
@@ -257,7 +215,7 @@ public class BlockModifierPatches {
     public static class MakeStatEquivalentCopy {
         public static AbstractCard Postfix(AbstractCard result, AbstractCard self) {
             for (AbstractBlockModifier mod : BlockModifierManager.modifiers(self)) {
-                if (!mod.isInnate()) {
+                if (!mod.isInherent()) {
                     BlockModifierManager.addModifier(result, mod);
                 }
             }
@@ -314,14 +272,6 @@ public class BlockModifierPatches {
     private static class BlockLocator extends SpireInsertLocator {
         public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
             Matcher finalMatcher = new Matcher.FieldAccessMatcher(AbstractPlayer.class, "powers");
-            return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
-        }
-    }
-
-    private static class CreatureAddBlockLocator extends SpireInsertLocator {
-        @Override
-        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
-            Matcher finalMatcher = new Matcher.MethodCallMatcher(MathUtils.class, "floor");
             return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
         }
     }
