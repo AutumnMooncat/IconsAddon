@@ -1,8 +1,10 @@
 package IconsAddon.patches;
 
 import IconsAddon.blockModifiers.AbstractBlockModifier;
+import IconsAddon.damageModifiers.AbstractDamageModifier;
 import IconsAddon.util.BlockContainer;
 import IconsAddon.util.BlockModifierManager;
+import IconsAddon.util.DamageModifierManager;
 import basemod.patches.com.megacrit.cardcrawl.actions.GameActionManager.OnPlayerLoseBlockToggle;
 import basemod.patches.com.megacrit.cardcrawl.core.AbstractCreature.ModifyPlayerLoseBlock;
 import com.badlogic.gdx.math.MathUtils;
@@ -208,44 +210,31 @@ public class BlockModifierPatches {
         }
     }
 
-    /*
-    @SpirePatch(clz = AbstractMonster.class, method = "damage")
-    public static class onAttackMonster {
-        @SpireInsertPatch(rlocs = {44}, localvars = "damageAmount")
-        public static void onAttack(AbstractMonster __instance, DamageInfo info, int damageAmount) {
-            if (info.owner != null) {
-                for (AbstractCustomBlockType b : CustomBlockManager.blockTypes(info.owner)) {
-                    b.onAttack(info, damageAmount, __instance);
-                }
-            }
-        }
-
-        @SpireInsertPatch(locator = MonsterOnAttackedLocator.class, localvars = "damageAmount")
-        public static void onAttacked(AbstractMonster __instance, DamageInfo info, int damageAmount) {
-            for (AbstractCustomBlockType b : CustomBlockManager.blockTypes(info.owner)) {
-                b.onAttacked(info, damageAmount);
+    @SpirePatch(clz = AbstractPlayer.class, method = "onVictory")
+    public static class ClearMonsterContainersOnVictory {
+        @SpirePrefixPatch
+        public static void byeByeContainers(AbstractPlayer __instance) {
+            for (AbstractMonster m : AbstractDungeon.getMonsters().monsters) {
+                BlockModifierManager.removeAllBlockContainers(m);
             }
         }
     }
 
-    @SpirePatch(clz = AbstractPlayer.class, method = "damage")
-    public static class onAttackPlayer {
-        @SpireInsertPatch(rlocs = {55}, localvars = "damageAmount")
-        public static void onAttack(AbstractPlayer __instance, DamageInfo info, int damageAmount) {
-            if (info.owner != null) {
-                for (AbstractCustomBlockType b : CustomBlockManager.blockTypes(info.owner)) {
-                    b.onAttack(info, damageAmount, __instance);
-                }
-            }
+    @SpirePatch(clz = AbstractPlayer.class, method = "preBattlePrep")
+    public static class ClearPlayerContainersOnPrep {
+        @SpirePrefixPatch
+        public static void byeByeContainers(AbstractPlayer __instance) {
+            BlockModifierManager.removeAllBlockContainers(__instance);
         }
+    }
 
-        @SpireInsertPatch(locator = PlayerOnAttackedLocator.class, localvars = "damageAmount")
-        public static void onAttacked(AbstractPlayer __instance, DamageInfo info, int damageAmount) {
-            for (AbstractCustomBlockType b : CustomBlockManager.blockTypes(__instance)) {
-                b.onAttacked(info, damageAmount);
-            }
+    @SpirePatch2(clz = AbstractMonster.class, method = "damage")
+    public static class ClearContainerOnDeath {
+        @SpireInsertPatch(locator = MonsterBlockLossOnDeath.class)
+        public static void byeByeContainers(AbstractMonster __instance) {
+            BlockModifierManager.removeAllBlockContainers(__instance);
         }
-    }*/
+    }
 
     private static class BlockFinalLocator extends SpireInsertLocator {
         public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
@@ -366,6 +355,14 @@ public class BlockModifierPatches {
             Matcher finalMatcher = new Matcher.FieldAccessMatcher(AbstractMonster.class, "powers");
             int[] tmp = LineFinder.findAllInOrder(ctMethodToPatch, finalMatcher);
             return new int[]{tmp[3]};
+        }
+    }
+
+    private static class MonsterBlockLossOnDeath extends SpireInsertLocator {
+        @Override
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.MethodCallMatcher(AbstractMonster.class, "loseBlock");
+            return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
         }
     }
 }
