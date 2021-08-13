@@ -55,52 +55,54 @@ public class BlockModifierPatches {
         @SpirePrefixPatch()
         public static void OnAttackedAndSaveInfo(AbstractCreature __instance, DamageInfo info, @ByRef int[] damageAmount) {
             BlockModifierManager.onAttacked(__instance, info, damageAmount[0]);
-            int tmp = damageAmount[0];
-            int removedAmount;
-            boolean isStartTurnLostBlock = OnPlayerLoseBlockToggle.isEnabled;
-            int backupIndex = -1;
-            int reduction = 0;
-            int effectiveAmount;
-            if (specificContainerToReduce != null) {
-                backupIndex = BlockModifierManager.blockContainers(__instance).indexOf(specificContainerToReduce);
-                BlockModifierManager.blockContainers(__instance).remove(backupIndex);
-                BlockModifierManager.blockContainers(__instance).add(0, specificContainerToReduce);
-            }
-            if (!isStartTurnLostBlock && !RetainMonsterBlockPatches.monsterStartOfTurn) {
-                for (BlockContainer b : BlockModifierManager.blockContainers(__instance)) {
-                    //effectiveAmount = Math.max(1, b.damageReducedPerBlockUsed());
-                    //removedAmount = Math.min((int)Math.ceil((double)tmp/effectiveAmount), b.currentAmount);
-                    removedAmount = Math.min(tmp, b.getBlockAmount());
-                    b.setBlockAmount(b.getBlockAmount() - removedAmount);
-                    if (b != specificContainerToReduce) {
-                        for (AbstractBlockModifier m : b.getBlockTypes()) {
-                            m.onThisBlockDamaged(info, removedAmount);
+            if (info.type != DamageInfo.DamageType.HP_LOSS && DamageModifierManager.getDamageMods(info).stream().noneMatch(AbstractDamageModifier::ignoresBlock)) {
+                int tmp = damageAmount[0];
+                int removedAmount;
+                boolean isStartTurnLostBlock = OnPlayerLoseBlockToggle.isEnabled;
+                int backupIndex = -1;
+                int reduction = 0;
+                int effectiveAmount;
+                if (specificContainerToReduce != null) {
+                    backupIndex = BlockModifierManager.blockContainers(__instance).indexOf(specificContainerToReduce);
+                    BlockModifierManager.blockContainers(__instance).remove(backupIndex);
+                    BlockModifierManager.blockContainers(__instance).add(0, specificContainerToReduce);
+                }
+                if (!isStartTurnLostBlock && !RetainMonsterBlockPatches.monsterStartOfTurn) {
+                    for (BlockContainer b : BlockModifierManager.blockContainers(__instance)) {
+                        //effectiveAmount = Math.max(1, b.damageReducedPerBlockUsed());
+                        //removedAmount = Math.min((int)Math.ceil((double)tmp/effectiveAmount), b.currentAmount);
+                        removedAmount = Math.min(tmp, b.getBlockAmount());
+                        b.setBlockAmount(b.getBlockAmount() - removedAmount);
+                        if (b != specificContainerToReduce) {
+                            for (AbstractBlockModifier m : b.getBlockTypes()) {
+                                m.onThisBlockDamaged(info, removedAmount);
+                            }
                         }
-                    }
-                    tmp -= removedAmount;
-                    //reduction += removedAmount*(1-effectiveAmount);
-                    if (b.getBlockAmount() <= 0) {
-                        int d = tmp;
-                        for (AbstractBlockModifier m : b.getBlockTypes()) {
-                            d = m.onRemove(false, info, d);
+                        tmp -= removedAmount;
+                        //reduction += removedAmount*(1-effectiveAmount);
+                        if (b.getBlockAmount() <= 0) {
+                            int d = tmp;
+                            for (AbstractBlockModifier m : b.getBlockTypes()) {
+                                d = m.onRemove(false, info, d);
+                            }
+                            reduction += tmp - d;
+                            tmp = d;
                         }
-                        reduction += tmp - d;
-                        tmp = d;
-                    }
-                    if (tmp <= 0 || reduction >= tmp) {
-                        break;
+                        if (tmp <= 0 || reduction >= tmp) {
+                            break;
+                        }
                     }
                 }
-            }
-            if (specificContainerToReduce != null) {
-                BlockModifierManager.blockContainers(__instance).remove(0);
-                BlockModifierManager.blockContainers(__instance).add(backupIndex, specificContainerToReduce);
-                specificContainerToReduce = null;
-            }
-            BlockModifierManager.removeEmptyBlockContainers(__instance);
-            damageAmount[0] -= reduction;
-            if (damageAmount[0] < 0) {
-                damageAmount[0] = 0;
+                if (specificContainerToReduce != null) {
+                    BlockModifierManager.blockContainers(__instance).remove(0);
+                    BlockModifierManager.blockContainers(__instance).add(backupIndex, specificContainerToReduce);
+                    specificContainerToReduce = null;
+                }
+                BlockModifierManager.removeEmptyBlockContainers(__instance);
+                damageAmount[0] -= reduction;
+                if (damageAmount[0] < 0) {
+                    damageAmount[0] = 0;
+                }
             }
         }
     }
