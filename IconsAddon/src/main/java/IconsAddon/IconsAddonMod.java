@@ -25,7 +25,7 @@ public class IconsAddonMod implements PostInitializeSubscriber, EditStringsSubsc
     // =============== INPUT TEXTURE LOCATION =================
     
     //Mod Badge - A small icon that appears in the mod settings menu next to your mod.
-    public static final String BADGE_IMAGE = "Badge.png";
+    public static final String BADGE_IMAGE = "IconsAddonResources/images/Badge.png";
     
     // =============== /INPUT TEXTURE LOCATION/ =================
     
