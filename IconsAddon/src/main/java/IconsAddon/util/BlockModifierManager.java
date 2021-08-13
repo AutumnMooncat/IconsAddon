@@ -3,11 +3,10 @@ package IconsAddon.util;
 import IconsAddon.blockModifiers.AbstractBlockModifier;
 import IconsAddon.patches.BindingPatches;
 import IconsAddon.patches.BlockModifierPatches;
-import IconsAddon.powers.BlockTipPower;
+import basemod.abstracts.CustomSavable;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import com.megacrit.cardcrawl.actions.AbstractGameAction;
-import com.megacrit.cardcrawl.actions.common.RemoveSpecificPowerAction;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.core.AbstractCreature;
@@ -19,8 +18,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
-public class BlockModifierManager {
+public class BlockModifierManager implements CustomSavable<Boolean> {
+
     private static final HashMap<Object, ArrayList<AbstractBlockModifier>> boundBlockObjects = new HashMap<>();
+
+    @Override
+    public Boolean onSave() {
+        return true;
+    }
+
+    @Override
+    public void onLoad(Boolean aBoolean) {
+        boundBlockObjects.clear();
+    }
 
     @SpirePatch(clz = AbstractCreature.class, method = SpirePatch.CLASS)
     private static class BlockTypes {
