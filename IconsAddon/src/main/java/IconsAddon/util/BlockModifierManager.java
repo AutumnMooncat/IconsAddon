@@ -7,11 +7,11 @@ import basemod.abstracts.CustomSavable;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import com.megacrit.cardcrawl.actions.AbstractGameAction;
+import com.megacrit.cardcrawl.actions.utility.UseCardAction;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
-import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import com.megacrit.cardcrawl.powers.AbstractPower;
 
 import java.util.ArrayList;
@@ -42,15 +42,15 @@ public class BlockModifierManager implements CustomSavable<Boolean> {
         for (BlockContainer b : BlockTypes.blockContainers.get(owner)) {
             if (b.containsSameBlockTypes(container) && b.shouldStack() && container.shouldStack()) {
                 b.setBlockAmount(b.getBlockAmount()+container.getBlockAmount());
-                for (AbstractBlockModifier t : b.getBlockTypes()) {
-                    t.onStack(container.getBlockAmount());
+                for (AbstractBlockModifier m : b.getBlockTypes()) {
+                    m.onStack(container.getBlockAmount());
                 }
                 stacked = true;
             }
         }
         if (!stacked) {
-            for (AbstractBlockModifier t : container.getBlockTypes()) {
-                t.onApplication();
+            for (AbstractBlockModifier m : container.getBlockTypes()) {
+                m.onApplication();
             }
             BlockTypes.blockContainers.get(owner).add(0, container);
             Collections.sort(BlockTypes.blockContainers.get(owner));
@@ -150,16 +150,16 @@ public class BlockModifierManager implements CustomSavable<Boolean> {
 
     public static void atEndOfRound(AbstractCreature owner) {
         for (BlockContainer b : blockContainers(owner)) {
-            for (AbstractBlockModifier t : b.getBlockTypes()) {
-                t.atEndOfRound();
+            for (AbstractBlockModifier m : b.getBlockTypes()) {
+                m.atEndOfRound();
             }
         }
     }
 
     public static float atDamageReceive(AbstractCreature owner, float damage, DamageInfo.DamageType type, AbstractCreature source) {
         for (BlockContainer b : blockContainers(owner)) {
-            for (AbstractBlockModifier t : b.getBlockTypes()) {
-                damage = t.atDamageReceive(damage, type, source);
+            for (AbstractBlockModifier m : b.getBlockTypes()) {
+                damage = m.atDamageReceive(damage, type, source);
             }
         }
         return damage;
@@ -167,8 +167,8 @@ public class BlockModifierManager implements CustomSavable<Boolean> {
 
     public static float atDamageFinalReceive(AbstractCreature owner, float damage, DamageInfo.DamageType type, AbstractCreature source) {
         for (BlockContainer b : blockContainers(owner)) {
-            for (AbstractBlockModifier t : b.getBlockTypes()) {
-                damage = t.atDamageFinalReceive(damage, type, source);
+            for (AbstractBlockModifier m : b.getBlockTypes()) {
+                damage = m.atDamageFinalReceive(damage, type, source);
             }
         }
         return damage;
@@ -176,8 +176,8 @@ public class BlockModifierManager implements CustomSavable<Boolean> {
 
     public static float atDamageGive(AbstractCreature owner, float damage, DamageInfo.DamageType type, AbstractCreature target, AbstractCard card) {
         for (BlockContainer b : blockContainers(owner)) {
-            for (AbstractBlockModifier t : b.getBlockTypes()) {
-                damage = t.atDamageGive(damage, type, target, card);
+            for (AbstractBlockModifier m : b.getBlockTypes()) {
+                damage = m.atDamageGive(damage, type, target, card);
             }
         }
         return damage;
@@ -185,8 +185,8 @@ public class BlockModifierManager implements CustomSavable<Boolean> {
 
     public static float atDamageFinalGive(AbstractCreature owner, float damage, DamageInfo.DamageType type, AbstractCreature target, AbstractCard card) {
         for (BlockContainer b : blockContainers(owner)) {
-            for (AbstractBlockModifier t : b.getBlockTypes()) {
-                damage = t.atDamageFinalGive(damage, type, target, card);
+            for (AbstractBlockModifier m : b.getBlockTypes()) {
+                damage = m.atDamageFinalGive(damage, type, target, card);
             }
         }
         return damage;
@@ -194,8 +194,8 @@ public class BlockModifierManager implements CustomSavable<Boolean> {
 
     public static int onHeal(AbstractCreature owner, int healAmount) {
         for (BlockContainer b : blockContainers(owner)) {
-            for (AbstractBlockModifier t : b.getBlockTypes()) {
-                healAmount = t.onHeal(healAmount);
+            for (AbstractBlockModifier m : b.getBlockTypes()) {
+                healAmount = m.onHeal(healAmount);
             }
         }
         return healAmount;
@@ -203,8 +203,8 @@ public class BlockModifierManager implements CustomSavable<Boolean> {
 
     public static void onAttack(AbstractCreature owner, DamageInfo info, int damageAmount, AbstractCreature target) {
         for (BlockContainer b : blockContainers(owner)) {
-            for (AbstractBlockModifier t : b.getBlockTypes()) {
-                t.onAttack(info, damageAmount, target);
+            for (AbstractBlockModifier m: b.getBlockTypes()) {
+                m.onAttack(info, damageAmount, target);
             }
         }
     }
@@ -212,8 +212,8 @@ public class BlockModifierManager implements CustomSavable<Boolean> {
     //TODO not manipulating damage taken. This is a design choice, but revisit later.
     public static void onAttacked(AbstractCreature owner, DamageInfo info, int damageAmount) {
         for (BlockContainer b : blockContainers(owner)) {
-            for (AbstractBlockModifier t : b.getBlockTypes()) {
-                t.onAttacked(info, damageAmount);
+            for (AbstractBlockModifier m : b.getBlockTypes()) {
+                m.onAttacked(info, damageAmount);
             }
         }
     }
@@ -221,8 +221,8 @@ public class BlockModifierManager implements CustomSavable<Boolean> {
     //TODO not manipulating damage taken. This is a design choice, but revisit later.
     public static int onAttackedPostBlockReductions(AbstractCreature owner, DamageInfo info, int damageAmount) {
         for (BlockContainer b : blockContainers(owner)) {
-            for (AbstractBlockModifier t : b.getBlockTypes()) {
-                t.onAttackedPostBlockReductions(info, damageAmount);
+            for (AbstractBlockModifier m : b.getBlockTypes()) {
+                m.onAttackedPostBlockReductions(info, damageAmount);
             }
         }
         return damageAmount;
@@ -230,16 +230,16 @@ public class BlockModifierManager implements CustomSavable<Boolean> {
 
     public static void onCardDraw(AbstractCreature owner, AbstractCard card) {
         for (BlockContainer b : blockContainers(owner)) {
-            for (AbstractBlockModifier t : b.getBlockTypes()) {
-                t.onCardDraw(card);
+            for (AbstractBlockModifier m : b.getBlockTypes()) {
+                m.onCardDraw(card);
             }
         }
     }
 
-    public static void onPlayCard(AbstractCreature owner, AbstractCard card, AbstractMonster m) {
+    public static void onUseCard(AbstractCreature owner, AbstractCard card, UseCardAction action) {
         for (BlockContainer b : blockContainers(owner)) {
-            for (AbstractBlockModifier t : b.getBlockTypes()) {
-                t.onPlayCard(card, m);
+            for (AbstractBlockModifier m : b.getBlockTypes()) {
+                m.onUseCard(card, action);
             }
         }
     }
@@ -247,8 +247,8 @@ public class BlockModifierManager implements CustomSavable<Boolean> {
     public static boolean onApplyPower(AbstractCreature owner, AbstractPower power, AbstractCreature target, AbstractCreature source) {
         boolean retVal = true;
         for (BlockContainer b : blockContainers(owner)) {
-            for (AbstractBlockModifier t : b.getBlockTypes()) {
-                retVal &= t.onApplyPower(power, target, source);
+            for (AbstractBlockModifier m : b.getBlockTypes()) {
+                retVal &= m.onApplyPower(power, target, source);
             }
         }
         return retVal;
@@ -256,8 +256,27 @@ public class BlockModifierManager implements CustomSavable<Boolean> {
 
     public static int onApplyPowerStacks(AbstractCreature owner, AbstractPower power, AbstractCreature target, AbstractCreature source, int stackAmount) {
         for (BlockContainer b : blockContainers(owner)) {
-            for (AbstractBlockModifier t : b.getBlockTypes()) {
-                stackAmount = t.onApplyPowerStacks(power, target, source, stackAmount);
+            for (AbstractBlockModifier m : b.getBlockTypes()) {
+                stackAmount = m.onApplyPowerStacks(power, target, source, stackAmount);
+            }
+        }
+        return stackAmount;
+    }
+
+    public static boolean onReceivePower(AbstractCreature owner, AbstractPower power, AbstractCreature target, AbstractCreature source) {
+        boolean retVal = true;
+        for (BlockContainer b : blockContainers(owner)) {
+            for (AbstractBlockModifier m : b.getBlockTypes()) {
+                retVal &= m.onReceivePower(power, target, source);
+            }
+        }
+        return retVal;
+    }
+
+    public static int onReceivePowerStacks(AbstractCreature owner, AbstractPower power, AbstractCreature target, AbstractCreature source, int stackAmount) {
+        for (BlockContainer b : blockContainers(owner)) {
+            for (AbstractBlockModifier m : b.getBlockTypes()) {
+                stackAmount = m.onReceivePowerStacks(power, target, source, stackAmount);
             }
         }
         return stackAmount;

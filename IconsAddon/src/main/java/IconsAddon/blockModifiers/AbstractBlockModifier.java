@@ -6,11 +6,11 @@ import basemod.helpers.TooltipInfo;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.megacrit.cardcrawl.actions.AbstractGameAction;
+import com.megacrit.cardcrawl.actions.utility.UseCardAction;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
-import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import com.megacrit.cardcrawl.powers.AbstractPower;
 
 import java.util.ArrayList;
@@ -88,7 +88,7 @@ public abstract class AbstractBlockModifier implements Comparable<AbstractBlockM
 
     public void onCardDraw(AbstractCard card) {}
 
-    public void onPlayCard(AbstractCard card, AbstractMonster m) {}
+    public void onUseCard(AbstractCard card, UseCardAction action) {}
 
     public boolean shouldStack() {
         return true;
@@ -103,6 +103,14 @@ public abstract class AbstractBlockModifier implements Comparable<AbstractBlockM
     }
 
     public int onApplyPowerStacks(AbstractPower power, AbstractCreature target, AbstractCreature source, int stackAmount) {
+        return stackAmount;
+    }
+
+    public boolean onReceivePower(AbstractPower abstractPower, AbstractCreature target, AbstractCreature source) {
+        return true;
+    }
+
+    public int onReceivePowerStacks(AbstractPower power, AbstractCreature target, AbstractCreature source, int stackAmount) {
         return stackAmount;
     }
 

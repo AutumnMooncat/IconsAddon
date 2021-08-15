@@ -1,20 +1,26 @@
 package IconsAddon.patches;
 
 import IconsAddon.blockModifiers.AbstractBlockModifier;
-import IconsAddon.damageModifiers.AbstractDamageModifier;
 import IconsAddon.util.BlockContainer;
 import IconsAddon.util.BlockModifierManager;
 import IconsAddon.util.DamageModifierManager;
 import basemod.patches.com.megacrit.cardcrawl.actions.GameActionManager.OnPlayerLoseBlockToggle;
 import basemod.patches.com.megacrit.cardcrawl.core.AbstractCreature.ModifyPlayerLoseBlock;
 import com.badlogic.gdx.math.MathUtils;
+import com.evacipated.cardcrawl.mod.stslib.patches.bothInterfaces.OnReceivePowerPatch;
+import com.evacipated.cardcrawl.mod.stslib.powers.interfaces.BetterOnApplyPowerPower;
+import com.evacipated.cardcrawl.mod.stslib.powers.interfaces.OnReceivePowerPower;
 import com.evacipated.cardcrawl.modthespire.lib.*;
+import com.megacrit.cardcrawl.actions.AbstractGameAction;
+import com.megacrit.cardcrawl.actions.utility.UseCardAction;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
+import com.megacrit.cardcrawl.monsters.MonsterGroup;
+import com.megacrit.cardcrawl.powers.AbstractPower;
 import javassist.CtBehavior;
 
 public class BlockModifierPatches {
@@ -57,7 +63,7 @@ public class BlockModifierPatches {
         @SpirePrefixPatch()
         public static void OnAttackedAndSaveInfo(AbstractCreature __instance, DamageInfo info, @ByRef int[] damageAmount) {
             BlockModifierManager.onAttacked(__instance, info, damageAmount[0]);
-            if (info.type != DamageInfo.DamageType.HP_LOSS && DamageModifierManager.getDamageMods(info).stream().noneMatch(AbstractDamageModifier::ignoresBlock)) {
+            if (info.type != DamageInfo.DamageType.HP_LOSS && DamageModifierManager.getDamageMods(info).stream().noneMatch(m -> m.ignoresBlock(__instance))) {
                 int tmp = damageAmount[0];
                 int removedAmount;
                 boolean isStartTurnLostBlock = OnPlayerLoseBlockToggle.isEnabled;
@@ -230,9 +236,106 @@ public class BlockModifierPatches {
 
     @SpirePatch2(clz = AbstractMonster.class, method = "damage")
     public static class ClearContainerOnDeath {
-        @SpireInsertPatch(locator = MonsterBlockLossOnDeath.class)
+        @SpireInsertPatch(locator = MonsterBlockLossOnDeathLocator.class)
         public static void byeByeContainers(AbstractMonster __instance) {
             BlockModifierManager.removeAllBlockContainers(__instance);
+        }
+    }
+
+    @SpirePatch2(clz = AbstractCreature.class, method = "heal", paramtypez = {int.class, boolean.class})
+    public static class OnHeal {
+        @SpireInsertPatch(locator = CreatureOnHealLocator.class)
+        public static void healthTime(AbstractCreature __instance, @ByRef int[] healAmount) {
+            healAmount[0] = BlockModifierManager.onHeal(__instance, healAmount[0]);
+        }
+    }
+
+    @SpirePatch2(clz = MonsterGroup.class, method = "applyEndOfTurnPowers")
+    public static class EndOfRound {
+        @SpireInsertPatch(locator = PlayerEndOfRoundLocator.class)
+        public static void endRoundPlayer(MonsterGroup __instance) {
+            BlockModifierManager.atEndOfRound(AbstractDungeon.player);
+        }
+
+        @SpireInsertPatch(locator = MonsterEndRoundLocator.class, localvars = "m")
+        public static void endRoundMonster(MonsterGroup __instance, AbstractMonster m) {
+            BlockModifierManager.atEndOfRound(m);
+        }
+    }
+
+    @SpirePatch(clz = AbstractMonster.class, method = "damage")
+    public static class OnAttackMonster {
+        @SpireInsertPatch(locator = PlayerOnAttackLocator.class, localvars = "damageAmount")
+        public static void onAttack(AbstractMonster __instance, DamageInfo info, int damageAmount) {
+            if (info.owner != null) {
+                BlockModifierManager.onAttack(info.owner, info, damageAmount, __instance);
+            }
+        }
+        /*@SpireInsertPatch(locator = MonsterOnAttackedLocator.class, localvars = "damageAmount")
+        public static void onAttacked(AbstractMonster __instance, DamageInfo info, int damageAmount) {
+            BlockModifierManager.onAttacked(__instance, info, damageAmount);
+        }*/
+    }
+    @SpirePatch(clz = AbstractPlayer.class, method = "damage")
+    public static class OnAttackPlayer {
+        @SpireInsertPatch(locator = MonsterOnAttackLocator.class, localvars = "damageAmount")
+        public static void onAttack(AbstractPlayer __instance, DamageInfo info, int damageAmount) {
+            if (info.owner != null) {
+                BlockModifierManager.onAttack(info.owner, info, damageAmount, __instance);
+            }
+        }
+        /*@SpireInsertPatch(locator = PlayerOnAttackedLocator.class, localvars = "damageAmount")
+        public static void onAttacked(AbstractPlayer __instance, DamageInfo info, int damageAmount) {
+            BlockModifierManager.onAttacked(__instance, info, damageAmount);
+        }*/
+    }
+
+    @SpirePatch(clz = AbstractPlayer.class, method = "draw", paramtypez = int.class)
+    public static class OnDrawCard {
+        @SpireInsertPatch(locator = OnDrawCardLocator.class, localvars = "c")
+        public static void onDraw(AbstractPlayer __instance, AbstractCard c) {
+            BlockModifierManager.onCardDraw(__instance, c);
+            for (AbstractMonster m : AbstractDungeon.getMonsters().monsters) {
+                if (!m.isDeadOrEscaped()) {
+                    BlockModifierManager.onCardDraw(m, c);
+                }
+            }
+        }
+    }
+
+    @SpirePatch(clz = UseCardAction.class, method = "<ctor>", paramtypez = {AbstractCard.class, AbstractCreature.class})
+    private static class OnUseCard {
+        @SpireInsertPatch(locator = PlayerOnUseCardLocator.class)
+        public static void onUseCardPlayer(UseCardAction __instance, AbstractCard card, AbstractCreature target) {
+            if (!card.dontTriggerOnUseCard) {
+                BlockModifierManager.onUseCard(AbstractDungeon.player, card, __instance);
+            }
+        }
+        @SpireInsertPatch(locator = MonsterOnUseCardLocator.class, localvars = "m")
+        public static void onUseCardMonster(UseCardAction __instance, AbstractCard card, AbstractCreature target, AbstractMonster m) {
+            if (!card.dontTriggerOnUseCard) {
+                BlockModifierManager.onUseCard(m, card, __instance);
+            }
+        }
+    }
+
+    @SpirePatch(clz = OnReceivePowerPatch.class, method = "CheckPower")
+    private static class ApplyAndReceivePowerStuff {
+        @SpireInsertPatch(locator = OnApplyPowerLocator.class, localvars = "apply")
+        public static void apply(AbstractGameAction action, AbstractCreature target, AbstractCreature source, float[] duration, AbstractPower powerToApply, @ByRef boolean[] apply) {
+            apply[0] = BlockModifierManager.onApplyPower(source, powerToApply, target, source);
+        }
+        @SpireInsertPatch(locator = OnApplyPowerStacksLocator.class)
+        public static void applyStacks(AbstractGameAction action, AbstractCreature target, AbstractCreature source, float[] duration, AbstractPower powerToApply) {
+            action.amount = BlockModifierManager.onApplyPowerStacks(source, powerToApply, target, source, action.amount);
+        }
+        @SpireInsertPatch(locator = OnReceivePowerLocator.class, localvars = "apply")
+        public static void receive(AbstractGameAction action, AbstractCreature target, AbstractCreature source, float[] duration, AbstractPower powerToApply, @ByRef boolean[] apply) {
+            apply[0] = BlockModifierManager.onReceivePower(source, powerToApply, target, source);
+        }
+        @SpireInsertPatch(locator = OnReceivePowerStacksLocator.class)
+        public static void receiveStacks(AbstractGameAction action, AbstractCreature target, AbstractCreature source, float[] duration, AbstractPower powerToApply) {
+            action.amount = BlockModifierManager.onReceivePowerStacks(source, powerToApply, target, source, action.amount);
         }
     }
 
@@ -358,10 +461,128 @@ public class BlockModifierPatches {
         }
     }
 
-    private static class MonsterBlockLossOnDeath extends SpireInsertLocator {
+    private static class MonsterBlockLossOnDeathLocator extends SpireInsertLocator {
         @Override
         public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
             Matcher finalMatcher = new Matcher.MethodCallMatcher(AbstractMonster.class, "loseBlock");
+            return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
+        }
+    }
+
+    private static class CreatureOnHealLocator extends SpireInsertLocator {
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.FieldAccessMatcher(AbstractCreature.class, "powers");
+            return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
+        }
+    }
+
+    private static class PlayerEndOfRoundLocator extends SpireInsertLocator {
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.FieldAccessMatcher(AbstractPlayer.class, "powers");
+            return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
+        }
+    }
+
+    private static class MonsterEndRoundLocator extends SpireInsertLocator {
+        @Override
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.FieldAccessMatcher(AbstractMonster.class, "powers");
+            return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
+        }
+    }
+
+    private static class PlayerOnAttackLocator extends SpireInsertLocator {
+        @Override
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.FieldAccessMatcher(AbstractCreature.class, "powers");
+            int[] tmp = LineFinder.findAllInOrder(ctMethodToPatch, finalMatcher);
+            return new int[]{tmp[1]};
+        }
+    }
+
+    private static class MonsterOnAttackedLocator extends SpireInsertLocator {
+        @Override
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.FieldAccessMatcher(AbstractMonster.class, "powers");
+            int[] tmp = LineFinder.findAllInOrder(ctMethodToPatch, finalMatcher);
+            return new int[]{tmp[2]};
+        }
+    }
+
+    private static class PlayerOnAttackedLocator extends SpireInsertLocator {
+        @Override
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.FieldAccessMatcher(AbstractPlayer.class, "powers");
+            int[] tmp = LineFinder.findAllInOrder(ctMethodToPatch, finalMatcher);
+            return new int[]{tmp[1]};
+        }
+    }
+
+    private static class MonsterOnAttackLocator extends SpireInsertLocator {
+        @Override
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.FieldAccessMatcher(AbstractCreature.class, "powers");
+            int[] tmp = LineFinder.findAllInOrder(ctMethodToPatch, finalMatcher);
+            return new int[]{tmp[1]};
+        }
+    }
+
+    private static class OnDrawCardLocator extends SpireInsertLocator {
+        @Override
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.FieldAccessMatcher(AbstractPlayer.class, "powers");
+            return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
+        }
+    }
+
+    private static class PlayerOnUseCardLocator extends SpireInsertLocator {
+        @Override
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.FieldAccessMatcher(AbstractPlayer.class, "powers");
+            return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
+        }
+    }
+
+    private static class MonsterOnUseCardLocator extends SpireInsertLocator {
+        @Override
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.FieldAccessMatcher(AbstractMonster.class, "powers");
+            return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
+        }
+    }
+
+    private static class OnApplyPowerLocator extends SpireInsertLocator {
+        @Override
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.MethodCallMatcher(BetterOnApplyPowerPower.class, "betterOnApplyPower");
+            int [] ret = LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
+            ret[0]++;
+            return ret;
+        }
+    }
+
+    private static class OnApplyPowerStacksLocator extends SpireInsertLocator {
+        @Override
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.MethodCallMatcher(BetterOnApplyPowerPower.class, "betterOnApplyPowerStacks");
+            return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
+        }
+    }
+
+    private static class OnReceivePowerLocator extends SpireInsertLocator {
+        @Override
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.MethodCallMatcher(OnReceivePowerPower.class, "onReceivePower");
+            int [] ret = LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
+            ret[0]++;
+            return ret;
+        }
+    }
+
+    private static class OnReceivePowerStacksLocator extends SpireInsertLocator {
+        @Override
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.MethodCallMatcher(OnReceivePowerPower.class, "onReceivePowerStacks");
             return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
         }
     }
