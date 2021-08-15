@@ -90,24 +90,24 @@ public class BindingPatches {
             AbstractGameAction a = AbstractDungeon.actionManager.currentAction;
             if (a != null) {
                 if (!BoundGameAction.actionDelayedDamageMods.get(a).isEmpty()) {
-                    DamageModifierManager.bindDamageMods(__instance, BoundGameAction.actionDelayedDamageMods.get(a));
+                    DamageModifierManager.bindDamageMods(__instance, BoundGameAction.actionDelayedDamageMods.get(a).stream().filter(m -> m.affectsDamageType(type)).collect(Collectors.toList()));
                     if (BoundGameAction.actionDelayedInstigator.get(a) instanceof AbstractCard) {
                         instigatorCard = BoundGameAction.actionDelayedCardInUse.get(a);
                     }
                 }
                 if (BoundGameAction.actionDelayedCardInUse.get(a) != null && a.source == damageSource) {
-                    DamageModifierManager.bindDamageMods(__instance, DamageModifierManager.modifiers(BoundGameAction.actionDelayedCardInUse.get(a)).stream().filter(m -> m.automaticBindingForCards).collect(Collectors.toList()));
+                    DamageModifierManager.bindDamageMods(__instance, DamageModifierManager.modifiers(BoundGameAction.actionDelayedCardInUse.get(a)).stream().filter(m -> m.automaticBindingForCards && m.affectsDamageType(type)).collect(Collectors.toList()));
                     instigatorCard = BoundGameAction.actionDelayedCardInUse.get(a);
                 }
             }
             if (!directlyBoundDamageMods.isEmpty()) {
-                DamageModifierManager.bindDamageMods(__instance, directlyBoundDamageMods);
+                DamageModifierManager.bindDamageMods(__instance, directlyBoundDamageMods.stream().filter(m -> m.affectsDamageType(type)).collect(Collectors.toList()));
                 if (directlyBoundInstigator instanceof AbstractCard) {
                     instigatorCard = (AbstractCard) directlyBoundInstigator;
                 }
             }
             if (cardInUse != null) {
-                DamageModifierManager.bindDamageMods(__instance, DamageModifierManager.modifiers(cardInUse).stream().filter(m -> m.automaticBindingForCards).collect(Collectors.toList()));
+                DamageModifierManager.bindDamageMods(__instance, DamageModifierManager.modifiers(cardInUse).stream().filter(m -> m.automaticBindingForCards && m.affectsDamageType(type)).collect(Collectors.toList()));
                 instigatorCard = cardInUse;
             }
             if (damageSource != null) {

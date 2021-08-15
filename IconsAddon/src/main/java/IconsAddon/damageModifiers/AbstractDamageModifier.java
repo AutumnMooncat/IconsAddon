@@ -25,6 +25,14 @@ public abstract class AbstractDamageModifier implements Comparable<AbstractDamag
         return false;
     }
 
+    public boolean ignoresThorns() {
+        return false;
+    }
+
+    public boolean affectsDamageType(DamageInfo.DamageType type) {
+        return true;
+    }
+
     public float atDamageGive(float damage, DamageInfo.DamageType type, AbstractCreature target, AbstractCard card) {
         return damage;
     }
