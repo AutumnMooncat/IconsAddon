@@ -2,6 +2,7 @@ package IconsAddon.patches;
 
 import IconsAddon.damageModifiers.AbstractDamageModifier;
 import IconsAddon.util.DamageModifierManager;
+import com.evacipated.cardcrawl.mod.stslib.patches.tempHp.PlayerDamage;
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
@@ -102,12 +103,25 @@ public class DamageModifierPatches {
             boolean bypass = false;
             for (AbstractDamageModifier mod : DamageModifierManager.getDamageMods(info)) {
                 mod.onDamageModifiedByBlock(info, Math.max(0, damageAmount-__instance.currentBlock), Math.min(damageAmount, __instance.currentBlock), __instance);
-                if (mod.ignoresBlock()) {
+                if (mod.ignoresBlock(__instance)) {
                     bypass = true;
                 }
             }
             if (bypass) {
                 return SpireReturn.Return(damageAmount);
+            }
+            return SpireReturn.Continue();
+        }
+    }
+
+    @SpirePatch(clz = PlayerDamage.class, method = "Insert", paramtypez = {AbstractCreature.class, DamageInfo.class, int[].class, boolean[].class})
+    public static class TempHPBypass {
+        @SpirePrefixPatch
+        public static SpireReturn<?> noDamagePls(AbstractCreature __instance, DamageInfo info, int[] damageAmount, boolean[] hadBlock) {
+            for (AbstractDamageModifier mod : DamageModifierManager.getDamageMods(info)) {
+                if (mod.ignoresTempHP(__instance)) {
+                    return SpireReturn.Return(damageAmount);
+                }
             }
             return SpireReturn.Continue();
         }

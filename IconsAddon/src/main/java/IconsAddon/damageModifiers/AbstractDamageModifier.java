@@ -17,11 +17,11 @@ public abstract class AbstractDamageModifier implements Comparable<AbstractDamag
         return false;
     }
 
-    public boolean ignoresBlock() {
+    public boolean ignoresBlock(AbstractCreature target) {
         return false;
     }
 
-    public boolean ignoresThorns() {
+    public boolean ignoresTempHP(AbstractCreature target) {
         return false;
     }
 
