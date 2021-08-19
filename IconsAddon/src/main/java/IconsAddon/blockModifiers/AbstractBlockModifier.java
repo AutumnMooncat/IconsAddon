@@ -66,6 +66,8 @@ public abstract class AbstractBlockModifier implements Comparable<AbstractBlockM
         return healAmount;
     }
 
+    public void atStartOfTurnPreBlockLoss() {}
+
     public void onStartOfTurnBlockLoss(int blockLost) {}
 
     public void onApplication() {}

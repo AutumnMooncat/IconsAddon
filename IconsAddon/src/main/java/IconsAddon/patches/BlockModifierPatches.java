@@ -12,6 +12,7 @@ import com.evacipated.cardcrawl.mod.stslib.powers.interfaces.BetterOnApplyPowerP
 import com.evacipated.cardcrawl.mod.stslib.powers.interfaces.OnReceivePowerPower;
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.megacrit.cardcrawl.actions.AbstractGameAction;
+import com.megacrit.cardcrawl.actions.GameActionManager;
 import com.megacrit.cardcrawl.actions.utility.UseCardAction;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
@@ -31,7 +32,7 @@ public class BlockModifierPatches {
     public static class ModifyStartOfTurnBlockLossPatch {
         @SpirePostfixPatch
         public static void pls(AbstractCreature __instance, int[] amount, boolean noAnimation) {
-            if (OnPlayerLoseBlockToggle.isEnabled) {
+            if (OnPlayerLoseBlockToggle.isEnabled && amount[0] > 0) {
                 int tmp = amount[0];
                 int removedAmount;
                 //Specifically retain the block types that are not fully removed
@@ -69,7 +70,7 @@ public class BlockModifierPatches {
                 boolean isStartTurnLostBlock = OnPlayerLoseBlockToggle.isEnabled;
                 int backupIndex = -1;
                 int reduction = 0;
-                int effectiveAmount;
+                // int effectiveAmount; ??TODO probably wont reimplement this, its just bad design to have Block that protects for more than 1 hp per 1 mount. Just give more lock, lol.
                 if (specificContainerToReduce != null) {
                     backupIndex = BlockModifierManager.blockContainers(__instance).indexOf(specificContainerToReduce);
                     BlockModifierManager.blockContainers(__instance).remove(backupIndex);
@@ -336,6 +337,25 @@ public class BlockModifierPatches {
         @SpireInsertPatch(locator = OnReceivePowerStacksLocator.class)
         public static void receiveStacks(AbstractGameAction action, AbstractCreature target, AbstractCreature source, float[] duration, AbstractPower powerToApply) {
             action.amount = BlockModifierManager.onReceivePowerStacks(source, powerToApply, target, source, action.amount);
+        }
+    }
+
+    @SpirePatch(clz = GameActionManager.class, method = "getNextAction")
+    public static class PreBlockLossCall {
+        @SpireInsertPatch(locator = Locator.class)
+        public static void preBlockLoss(GameActionManager __instance) {
+            for (BlockContainer b : BlockModifierManager.blockContainers(AbstractDungeon.player)) {
+                for (AbstractBlockModifier mod : b.getBlockTypes()) {
+                    mod.atStartOfTurnPreBlockLoss();
+                }
+            }
+        }
+        private static class Locator extends SpireInsertLocator {
+            @Override
+            public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+                Matcher finalMatcher = new Matcher.MethodCallMatcher(AbstractPlayer.class, "hasPower");
+                return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
+            }
         }
     }
 

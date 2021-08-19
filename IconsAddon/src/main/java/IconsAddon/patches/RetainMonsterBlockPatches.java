@@ -4,7 +4,9 @@ import IconsAddon.blockModifiers.AbstractBlockModifier;
 import IconsAddon.util.BlockContainer;
 import IconsAddon.util.BlockModifierManager;
 import com.evacipated.cardcrawl.modthespire.lib.*;
+import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.AbstractCreature;
+import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import com.megacrit.cardcrawl.monsters.MonsterGroup;
 import javassist.CtBehavior;
@@ -40,11 +42,30 @@ public class RetainMonsterBlockPatches {
         }
     }
 
+    @SpirePatch(clz = MonsterGroup.class, method = "applyPreTurnLogic")
+    public static class PreBlockLossCall {
+        @SpireInsertPatch(locator = Locator.class, localvars = "m")
+        public static void preBlockLoss(MonsterGroup __instance, AbstractMonster m) {
+            for (BlockContainer b : BlockModifierManager.blockContainers(m)) {
+                for (AbstractBlockModifier mod : b.getBlockTypes()) {
+                    mod.atStartOfTurnPreBlockLoss();
+                }
+            }
+        }
+        private static class Locator extends SpireInsertLocator {
+            @Override
+            public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+                Matcher finalMatcher = new Matcher.MethodCallMatcher(AbstractMonster.class, "hasPower");
+                return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
+            }
+        }
+    }
+
     @SpirePatch(clz = AbstractCreature.class, method = "loseBlock", paramtypez = {int.class, boolean.class})
     public static class DecrementCustomBlockAmounts {
         @SpirePrefixPatch
         public static void pls(AbstractCreature __instance, @ByRef int[] amount) {
-            if (monsterStartOfTurn) {
+            if (monsterStartOfTurn && amount[0] > 0) {
                 int tmp = amount[0];
                 int removedAmount;
                 //Specifically retain the block types that are not fully removed
