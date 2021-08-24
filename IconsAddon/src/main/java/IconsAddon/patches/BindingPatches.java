@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.megacrit.cardcrawl.actions.AbstractGameAction;
 import com.megacrit.cardcrawl.actions.GameActionManager;
+import com.megacrit.cardcrawl.actions.common.ApplyPowerAction;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
@@ -32,9 +33,11 @@ public class BindingPatches {
     public static Object directlyBoundInstigator;
     private static AbstractCard cardInUse;
 
+    private static boolean canPassInstigator = true;
+
     @SpirePatch(clz = AbstractGameAction.class, method = SpirePatch.CLASS)
     public static class BoundGameAction {
-        public static SpireField<Object> actionDelayedInstigator = new SpireField<>(() -> null);
+        public static SpireField<Object> actionDelayedDirectlyBoundInstigator = new SpireField<>(() -> null);
         public static SpireField<AbstractCard> actionDelayedCardInUse = new SpireField<>(() -> null);
         public static SpireField<ArrayList<AbstractDamageModifier>> actionDelayedDamageMods = new SpireField<>(ArrayList::new);
         public static SpireField<ArrayList<AbstractBlockModifier>> actionDelayedBlockMods = new SpireField<>(ArrayList::new);
@@ -74,9 +77,14 @@ public class BindingPatches {
         @SpirePrefixPatch
         public static void WithoutCrashingHopefully(GameActionManager __instance, AbstractGameAction action) {
             //When our action is added to the queue, see if there is an active object in use that caused this to happen
-            if (cardInUse != null) {
+            if (cardInUse != null && !(action instanceof ApplyPowerAction)) {
                 //If so, this is our instigator object, we need to add any non-innate card mods
                 BoundGameAction.actionDelayedCardInUse.set(action, cardInUse);
+            }
+            //Daisy chain our actions if we can
+            AbstractGameAction a = AbstractDungeon.actionManager.currentAction;
+            if (a != null && BoundGameAction.actionDelayedCardInUse.get(a) != null) {
+                BoundGameAction.actionDelayedCardInUse.set(action, BoundGameAction.actionDelayedCardInUse.get(a));
             }
         }
     }
@@ -88,10 +96,10 @@ public class BindingPatches {
             AbstractCard instigatorCard = null;
             //Grab the action currently running, as this is what was processing when our damage info was created
             AbstractGameAction a = AbstractDungeon.actionManager.currentAction;
-            if (a != null) {
+            if (a != null && canPassInstigator) {
                 if (!BoundGameAction.actionDelayedDamageMods.get(a).isEmpty()) {
                     DamageModifierManager.bindDamageMods(__instance, BoundGameAction.actionDelayedDamageMods.get(a).stream().filter(m -> m.affectsDamageType(type)).collect(Collectors.toList()));
-                    if (BoundGameAction.actionDelayedInstigator.get(a) instanceof AbstractCard) {
+                    if (BoundGameAction.actionDelayedDirectlyBoundInstigator.get(a) instanceof AbstractCard) {
                         instigatorCard = BoundGameAction.actionDelayedCardInUse.get(a);
                     }
                 }
@@ -177,4 +185,18 @@ public class BindingPatches {
             return LineFinder.findInOrder(ctMethodToPatch, finalMatcher);
         }
     }
+
+    @SpirePatch(clz = AbstractPlayer.class, method = "damage")
+    @SpirePatch(clz = AbstractMonster.class, method = "damage")
+    public static class DisableReactionaryActionBinding {
+        @SpirePrefixPatch
+        public static void disableBefore(AbstractCreature __instance, DamageInfo info) {
+            canPassInstigator = false;
+        }
+        @SpirePostfixPatch
+        public static void enableAfter(AbstractCreature __instance, DamageInfo info) {
+            canPassInstigator = true;
+        }
+    }
+
 }

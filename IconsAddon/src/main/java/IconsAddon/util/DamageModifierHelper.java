@@ -37,7 +37,7 @@ public class DamageModifierHelper {
     }
 
     public static void bindAction(Object objectWithDamageModifier, AbstractGameAction action) {
-        BindingPatches.BoundGameAction.actionDelayedInstigator.set(action, objectWithDamageModifier);
+        BindingPatches.BoundGameAction.actionDelayedDirectlyBoundInstigator.set(action, objectWithDamageModifier);
         bindActionFromArray(DamageModifierManager.modifiers(objectWithDamageModifier), action);
     }
 
