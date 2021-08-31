@@ -83,7 +83,7 @@ public class BindingPatches {
             }
             //Daisy chain our actions if we can
             AbstractGameAction a = AbstractDungeon.actionManager.currentAction;
-            if (a != null && BoundGameAction.actionDelayedCardInUse.get(a) != null) {
+            if (a != null && BoundGameAction.actionDelayedCardInUse.get(a) != null && canPassInstigator) {
                 BoundGameAction.actionDelayedCardInUse.set(action, BoundGameAction.actionDelayedCardInUse.get(a));
             }
         }
