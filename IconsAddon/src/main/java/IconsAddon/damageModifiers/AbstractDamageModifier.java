@@ -10,7 +10,7 @@ import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import java.util.ArrayList;
 
 public abstract class AbstractDamageModifier implements Comparable<AbstractDamageModifier> {
-    public int priority = 0;
+    public short priority = 0;
     public boolean automaticBindingForCards = true;
 
     public boolean isInherent() {

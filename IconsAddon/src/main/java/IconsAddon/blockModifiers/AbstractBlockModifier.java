@@ -144,7 +144,7 @@ public abstract class AbstractBlockModifier implements Comparable<AbstractBlockM
         return Priority.NORMAL;
     }
 
-    public int subPriority() {
+    public short subPriority() {
         return 0;
     }
 
