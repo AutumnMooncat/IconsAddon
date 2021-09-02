@@ -187,14 +187,26 @@ public class BindingPatches {
     }
 
     @SpirePatch(clz = AbstractPlayer.class, method = "damage")
+    @SpirePatch(clz = AbstractPlayer.class, method = "onCardDrawOrDiscard")
+    @SpirePatch(clz = AbstractPlayer.class, method = "draw", paramtypez = int.class)
+    @SpirePatch(clz = AbstractPlayer.class, method = "onVictory")
+    @SpirePatch(clz = AbstractPlayer.class, method = "channelOrb")
     @SpirePatch(clz = AbstractMonster.class, method = "damage")
+    @SpirePatch(clz = AbstractMonster.class, method = "heal")
+    @SpirePatch(clz = AbstractMonster.class, method = "die", paramtypez = boolean.class)
+    @SpirePatch(clz = AbstractCreature.class, method = "heal", paramtypez = {int.class, boolean.class})
+    @SpirePatch(clz = AbstractCreature.class, method = "addBlock")
+    @SpirePatch(clz = AbstractCreature.class, method = "addPower")
+    @SpirePatch(clz = AbstractCreature.class, method = "applyStartOfTurnPowers")
+    @SpirePatch(clz = AbstractCreature.class, method = "applyTurnPowers")
+    @SpirePatch(clz = AbstractCreature.class, method = "applyStartOfTurnPostDrawPowers")
     public static class DisableReactionaryActionBinding {
         @SpirePrefixPatch
-        public static void disableBefore(AbstractCreature __instance, DamageInfo info) {
+        public static void disableBefore(AbstractCreature __instance) {
             canPassInstigator = false;
         }
         @SpirePostfixPatch
-        public static void enableAfter(AbstractCreature __instance, DamageInfo info) {
+        public static void enableAfter(AbstractCreature __instance) {
             canPassInstigator = true;
         }
     }
