@@ -73,4 +73,6 @@ public abstract class AbstractDamageModifier implements Comparable<AbstractDamag
     public int compareTo(AbstractDamageModifier other) {
         return this.priority - other.priority;
     }
+
+    public abstract AbstractDamageModifier makeCopy();
 }
