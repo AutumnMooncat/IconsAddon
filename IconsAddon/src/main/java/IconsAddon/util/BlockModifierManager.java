@@ -246,18 +246,22 @@ public class BlockModifierManager implements CustomSavable<Boolean> {
 
     public static boolean onApplyPower(AbstractCreature owner, AbstractPower power, AbstractCreature target, AbstractCreature source) {
         boolean retVal = true;
-        for (BlockContainer b : blockContainers(owner)) {
-            for (AbstractBlockModifier m : b.getBlockTypes()) {
-                retVal &= m.onApplyPower(power, target, source);
+        if (owner != null) {
+            for (BlockContainer b : blockContainers(owner)) {
+                for (AbstractBlockModifier m : b.getBlockTypes()) {
+                    retVal &= m.onApplyPower(power, target, source);
+                }
             }
         }
         return retVal;
     }
 
     public static int onApplyPowerStacks(AbstractCreature owner, AbstractPower power, AbstractCreature target, AbstractCreature source, int stackAmount) {
-        for (BlockContainer b : blockContainers(owner)) {
-            for (AbstractBlockModifier m : b.getBlockTypes()) {
-                stackAmount = m.onApplyPowerStacks(power, target, source, stackAmount);
+        if (owner != null) {
+            for (BlockContainer b : blockContainers(owner)) {
+                for (AbstractBlockModifier m : b.getBlockTypes()) {
+                    stackAmount = m.onApplyPowerStacks(power, target, source, stackAmount);
+                }
             }
         }
         return stackAmount;
@@ -265,18 +269,22 @@ public class BlockModifierManager implements CustomSavable<Boolean> {
 
     public static boolean onReceivePower(AbstractCreature owner, AbstractPower power, AbstractCreature target, AbstractCreature source) {
         boolean retVal = true;
-        for (BlockContainer b : blockContainers(owner)) {
-            for (AbstractBlockModifier m : b.getBlockTypes()) {
-                retVal &= m.onReceivePower(power, target, source);
+        if (owner != null) {
+            for (BlockContainer b : blockContainers(owner)) {
+                for (AbstractBlockModifier m : b.getBlockTypes()) {
+                    retVal &= m.onReceivePower(power, target, source);
+                }
             }
         }
         return retVal;
     }
 
     public static int onReceivePowerStacks(AbstractCreature owner, AbstractPower power, AbstractCreature target, AbstractCreature source, int stackAmount) {
-        for (BlockContainer b : blockContainers(owner)) {
-            for (AbstractBlockModifier m : b.getBlockTypes()) {
-                stackAmount = m.onReceivePowerStacks(power, target, source, stackAmount);
+        if (owner != null) {
+            for (BlockContainer b : blockContainers(owner)) {
+                for (AbstractBlockModifier m : b.getBlockTypes()) {
+                    stackAmount = m.onReceivePowerStacks(power, target, source, stackAmount);
+                }
             }
         }
         return stackAmount;

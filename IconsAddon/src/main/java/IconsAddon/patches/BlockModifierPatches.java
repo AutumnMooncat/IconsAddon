@@ -332,11 +332,11 @@ public class BlockModifierPatches {
         }
         @SpireInsertPatch(locator = OnReceivePowerLocator.class, localvars = "apply")
         public static void receive(AbstractGameAction action, AbstractCreature target, AbstractCreature source, float[] duration, AbstractPower powerToApply, @ByRef boolean[] apply) {
-            apply[0] = BlockModifierManager.onReceivePower(source, powerToApply, target, source);
+            apply[0] = BlockModifierManager.onReceivePower(target, powerToApply, target, source);
         }
         @SpireInsertPatch(locator = OnReceivePowerStacksLocator.class)
         public static void receiveStacks(AbstractGameAction action, AbstractCreature target, AbstractCreature source, float[] duration, AbstractPower powerToApply) {
-            action.amount = BlockModifierManager.onReceivePowerStacks(source, powerToApply, target, source, action.amount);
+            action.amount = BlockModifierManager.onReceivePowerStacks(target, powerToApply, target, source, action.amount);
         }
     }
 
