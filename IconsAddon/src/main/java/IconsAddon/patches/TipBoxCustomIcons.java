@@ -19,11 +19,11 @@ import java.util.ArrayList;
 
 public class TipBoxCustomIcons {
 
+    private static final float CARD_ENERGY_IMG_WIDTH = 24.0f * Settings.scale;
+
     @SpirePatch(clz= TipHelper.class, method="renderPowerTips")
     public static class DontYeetPowerIcon
     {
-        private static final float CARD_ENERGY_IMG_WIDTH = 24.0f * Settings.scale;
-
         @SpireInsertPatch(locator = Locator.class, localvars = {"tip"})
         public static void StopThat(float x, float y, SpriteBatch sb, ArrayList<PowerTip> powerTips, @ByRef PowerTip[] tip)
         {
@@ -60,8 +60,6 @@ public class TipBoxCustomIcons {
     @SpirePatch(clz= FontHelper.class, method="getSmartHeight")
     public static class DontMakeNewLine
     {
-        private static final float CARD_ENERGY_IMG_WIDTH = 24.0f * Settings.scale;
-
         @SpireInsertPatch(locator = Locator.class, localvars = {"word"})
         public static void IfThereIsAnIcon(BitmapFont font, String msg, float lineWidth, float lineSpacing, @ByRef float[] ___curWidth, float ___curHeight, @ByRef String[] word)
         {
@@ -72,8 +70,7 @@ public class TipBoxCustomIcons {
                 }
                 AbstractCustomIcon icon = CustomIconHelper.getIcon(key);
                 if (icon != null) {
-                    float width = CARD_ENERGY_IMG_WIDTH * Settings.scale;
-                    ___curWidth[0] += width;
+                    ___curWidth[0] += CARD_ENERGY_IMG_WIDTH;
                     word[0] = "";
                 }
             }
@@ -94,8 +91,6 @@ public class TipBoxCustomIcons {
     /*@SpirePatch2(clz= FontHelper.class, method="renderWrappedText", paramtypez = {SpriteBatch.class, BitmapFont.class, String.class, float.class, float.class, float.class, Color.class, float.class})
     public static class MakeRelicsWork
     {
-        private static final float CARD_ENERGY_IMG_WIDTH = 24.0f * Settings.scale;
-
         @SpireInsertPatch(locator = Locator.class)
         public static void IfThereIsAnIcon(SpriteBatch sb, BitmapFont font, @ByRef String[] msg, float x, float y, float width, Color c, float scale)
         {
@@ -139,8 +134,6 @@ public class TipBoxCustomIcons {
     @SpirePatch(clz= FontHelper.class, method="renderSmartText", paramtypez = {SpriteBatch.class, BitmapFont.class, String.class, float.class, float.class, float.class, float.class, Color.class})
     public static class FontHelpFixes
     {
-        private static final float CARD_ENERGY_IMG_WIDTH = 24.0f * Settings.scale;
-
         @SpireInsertPatch(locator = Locator.class, localvars = {"word"})
         public static void DrawIconsPls(SpriteBatch sb, BitmapFont font, String msg, float x, float y, float lineWidth, float lineSpacing, Color baseColor, @ByRef float[] ___curWidth, float ___curHeight, @ByRef String[] word)
         {
@@ -151,9 +144,8 @@ public class TipBoxCustomIcons {
                 }
                 AbstractCustomIcon icon = CustomIconHelper.getIcon(key);
                 if (icon != null) {
-                    float width = CARD_ENERGY_IMG_WIDTH * Settings.scale;
                     renderSmallIcon(sb, icon, x+___curWidth[0], y+___curHeight);
-                    ___curWidth[0] += width;
+                    ___curWidth[0] += CARD_ENERGY_IMG_WIDTH;
                     word[0] = "";
                 }
             }
