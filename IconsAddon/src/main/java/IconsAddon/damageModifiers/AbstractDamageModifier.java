@@ -49,6 +49,8 @@ public abstract class AbstractDamageModifier implements Comparable<AbstractDamag
 
     public void onDamageModifiedByBlock(DamageInfo info, int unblockedAmount, int blockedAmount, AbstractCreature target) {}
 
+    public void onLastDamageTakenUpdate(DamageInfo info, int lastDamageTaken, int overkillAmount, AbstractCreature target) {}
+
     public String getCardDescriptor() {
         return null;
     }
