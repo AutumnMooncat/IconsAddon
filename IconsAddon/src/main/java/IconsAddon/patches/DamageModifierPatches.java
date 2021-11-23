@@ -10,8 +10,10 @@ import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
+import com.megacrit.cardcrawl.powers.AbstractPower;
 import com.megacrit.cardcrawl.powers.ThornsPower;
 import javassist.CtBehavior;
+import org.apache.logging.log4j.Logger;
 
 public class DamageModifierPatches {
 
@@ -50,18 +52,26 @@ public class DamageModifierPatches {
     }
 
     @SpirePatch(clz = AbstractMonster.class, method = "damage")
-    public static class onAttackMonster {
-        @SpireInsertPatch(rlocs = {34}, localvars = "damageAmount")
+    public static class OnAttackMonster {
+        @SpireInsertPatch(locator = OnAttackToChangeDamageLocator.class, localvars = "damageAmount")
         public static void toChangeDamage(AbstractMonster __instance, DamageInfo info, @ByRef int[] damageAmount) {
             for (AbstractDamageModifier mod : DamageModifierManager.getDamageMods(info)) {
                 damageAmount[0] = mod.onAttackToChangeDamage(info, damageAmount[0], __instance);
             }
         }
 
-        @SpireInsertPatch(rlocs = {44}, localvars = "damageAmount")
+        @SpireInsertPatch(locator = OnAttackLocator.class, localvars = "damageAmount")
         public static void onAttack(AbstractMonster __instance, DamageInfo info, int damageAmount) {
             for (AbstractDamageModifier mod : DamageModifierManager.getDamageMods(info)) {
                 mod.onAttack(info, damageAmount, __instance);
+            }
+        }
+
+        @SpireInsertPatch(locator = LastDamageTakenLocator.class, localvars = "damageAmount")
+        public static void onLastDamageTakenUpdate(AbstractMonster __instance, DamageInfo info, int damageAmount) {
+            int overkill = damageAmount > __instance.lastDamageTaken ? damageAmount - __instance.lastDamageTaken : 0;
+            for (AbstractDamageModifier mod : DamageModifierManager.getDamageMods(info)) {
+                mod.onLastDamageTakenUpdate(info, __instance.lastDamageTaken, overkill, __instance);
             }
         }
 
@@ -75,17 +85,30 @@ public class DamageModifierPatches {
     }
 
     @SpirePatch(clz = AbstractPlayer.class, method = "damage")
-    public static class onAttackPlayer {
-        @SpireInsertPatch(rlocs = {29}, localvars = "damageAmount")
+    public static class OnAttackPlayer {
+        @SpireInsertPatch(locator = OnAttackToChangeDamageLocator.class, localvars = "damageAmount")
         public static void toChangeDamage(AbstractPlayer __instance, DamageInfo info, @ByRef int[] damageAmount) {
             for (AbstractDamageModifier mod : DamageModifierManager.getDamageMods(info)) {
                 damageAmount[0] = mod.onAttackToChangeDamage(info, damageAmount[0], __instance);
             }
         }
-        @SpireInsertPatch(rlocs = {55}, localvars = "damageAmount")
+        @SpireInsertPatch(locator = OnAttackLocator.class, localvars = "damageAmount")
         public static void onAttack(AbstractPlayer __instance, DamageInfo info, int damageAmount) {
             for (AbstractDamageModifier mod : DamageModifierManager.getDamageMods(info)) {
                 mod.onAttack(info, damageAmount, __instance);
+            }
+        }
+        @SpireInsertPatch(locator = OwnerIsNullFailsafeLocator.class, localvars = "damageAmount")
+        public static void onAttackFailsafe(AbstractPlayer __instance, DamageInfo info, int damageAmount) {
+            for (AbstractDamageModifier mod : DamageModifierManager.getDamageMods(info)) {
+                mod.onAttack(info, damageAmount, __instance);
+            }
+        }
+        @SpireInsertPatch(locator = LastDamageTakenLocator.class, localvars = "damageAmount")
+        public static void onLastDamageTakenUpdate(AbstractPlayer __instance, DamageInfo info, int damageAmount) {
+            int overkill = damageAmount > __instance.lastDamageTaken ? damageAmount - __instance.lastDamageTaken : 0;
+            for (AbstractDamageModifier mod : DamageModifierManager.getDamageMods(info)) {
+                mod.onLastDamageTakenUpdate(info, __instance.lastDamageTaken, overkill, __instance);
             }
         }
         @SpirePostfixPatch()
@@ -184,6 +207,42 @@ public class DamageModifierPatches {
         @Override
         public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
             Matcher finalMatcher = new Matcher.FieldAccessMatcher(AbstractPlayer.class, "powers");
+            int[] tmp = LineFinder.findAllInOrder(ctMethodToPatch, finalMatcher);
+            return new int[]{tmp[0]};
+        }
+    }
+
+    private static class OnAttackToChangeDamageLocator extends SpireInsertLocator {
+        @Override
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.MethodCallMatcher(AbstractPower.class, "onAttackToChangeDamage");
+            int[] tmp = LineFinder.findAllInOrder(ctMethodToPatch, finalMatcher);
+            return new int[]{tmp[0]+2};
+        }
+    }
+
+    private static class OnAttackLocator extends SpireInsertLocator {
+        @Override
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.MethodCallMatcher(AbstractPower.class, "onAttack");
+            int[] tmp = LineFinder.findAllInOrder(ctMethodToPatch, finalMatcher);
+            return new int[]{tmp[0]+2};
+        }
+    }
+
+    private static class LastDamageTakenLocator extends SpireInsertLocator {
+        @Override
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.MethodCallMatcher(Math.class, "min");
+            int[] tmp = LineFinder.findAllInOrder(ctMethodToPatch, finalMatcher);
+            return new int[]{tmp[0]+1};
+        }
+    }
+
+    private static class OwnerIsNullFailsafeLocator extends SpireInsertLocator {
+        @Override
+        public int[] Locate(CtBehavior ctMethodToPatch) throws Exception {
+            Matcher finalMatcher = new Matcher.MethodCallMatcher(Logger.class, "info");
             int[] tmp = LineFinder.findAllInOrder(ctMethodToPatch, finalMatcher);
             return new int[]{tmp[0]};
         }
