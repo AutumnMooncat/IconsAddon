@@ -70,7 +70,6 @@ public class BlockModifierPatches {
                 boolean isStartTurnLostBlock = OnPlayerLoseBlockToggle.isEnabled;
                 int backupIndex = -1;
                 int reduction = 0;
-                // int effectiveAmount; ??TODO probably wont reimplement this, its just bad design to have Block that protects for more than 1 hp per 1 mount. Just give more lock, lol.
                 if (specificContainerToReduce != null) {
                     backupIndex = BlockModifierManager.blockContainers(__instance).indexOf(specificContainerToReduce);
                     BlockModifierManager.blockContainers(__instance).remove(backupIndex);
@@ -78,8 +77,6 @@ public class BlockModifierPatches {
                 }
                 if (!isStartTurnLostBlock && !RetainMonsterBlockPatches.monsterStartOfTurn) {
                     for (BlockContainer b : BlockModifierManager.blockContainers(__instance)) {
-                        //effectiveAmount = Math.max(1, b.damageReducedPerBlockUsed());
-                        //removedAmount = Math.min((int)Math.ceil((double)tmp/effectiveAmount), b.currentAmount);
                         removedAmount = Math.min(tmp, b.getBlockAmount());
                         b.setBlockAmount(b.getBlockAmount() - removedAmount);
                         if (b != specificContainerToReduce) {
@@ -88,7 +85,6 @@ public class BlockModifierPatches {
                             }
                         }
                         tmp -= removedAmount;
-                        //reduction += removedAmount*(1-effectiveAmount);
                         if (b.getBlockAmount() <= 0) {
                             int d = tmp;
                             for (AbstractBlockModifier m : b.getBlockTypes()) {
