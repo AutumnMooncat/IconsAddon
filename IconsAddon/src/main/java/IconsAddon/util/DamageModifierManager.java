@@ -1,7 +1,6 @@
 package IconsAddon.util;
 
 import IconsAddon.damageModifiers.AbstractDamageModifier;
-import basemod.abstracts.CustomSavable;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import com.megacrit.cardcrawl.cards.AbstractCard;
@@ -12,19 +11,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-public class DamageModifierManager implements CustomSavable<Boolean> {
+public class DamageModifierManager {
 
     private static final HashMap<Object, List<AbstractDamageModifier>> boundDamageObjects = new HashMap<>();
 
-    @Override
-    public Boolean onSave() {
-        return true;
-    }
-
-    @Override
-    public void onLoad(Boolean aBoolean) {
-        boundDamageObjects.clear();
-    }
+    //TODO - Clear the array?
 
     @SpirePatch(clz = DamageInfo.class, method = SpirePatch.CLASS)
     private static class BoundDamageInfo {

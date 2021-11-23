@@ -3,7 +3,6 @@ package IconsAddon.util;
 import IconsAddon.blockModifiers.AbstractBlockModifier;
 import IconsAddon.patches.BindingPatches;
 import IconsAddon.patches.BlockModifierPatches;
-import basemod.abstracts.CustomSavable;
 import com.evacipated.cardcrawl.modthespire.lib.SpireField;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import com.megacrit.cardcrawl.actions.AbstractGameAction;
@@ -18,19 +17,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 
-public class BlockModifierManager implements CustomSavable<Boolean> {
+public class BlockModifierManager {
 
     private static final HashMap<Object, ArrayList<AbstractBlockModifier>> boundBlockObjects = new HashMap<>();
 
-    @Override
-    public Boolean onSave() {
-        return true;
-    }
-
-    @Override
-    public void onLoad(Boolean aBoolean) {
-        boundBlockObjects.clear();
-    }
+    //TODO - Clear the array?
 
     @SpirePatch(clz = AbstractCreature.class, method = SpirePatch.CLASS)
     private static class BlockTypes {
