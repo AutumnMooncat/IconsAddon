@@ -8,12 +8,13 @@ import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.cards.DamageInfo;
 import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.AbstractCreature;
-import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import com.megacrit.cardcrawl.powers.AbstractPower;
 import com.megacrit.cardcrawl.powers.ThornsPower;
 import javassist.CtBehavior;
 import org.apache.logging.log4j.Logger;
+
+import java.util.ArrayList;
 
 public class DamageModifierPatches {
 
@@ -26,10 +27,10 @@ public class DamageModifierPatches {
             }
         }
 
-        @SpireInsertPatch(locator = MultiDamageLocator.class, localvars = {"tmp","i"})
-        public static void multi(AbstractCard __instance, AbstractMonster mo, float[] tmp, int i) {
+        @SpireInsertPatch(locator = MultiDamageLocator.class, localvars = {"tmp","i","m"})
+        public static void multi(AbstractCard __instance, AbstractMonster mo, float[] tmp, int i, ArrayList<AbstractMonster> m) {
             for (AbstractDamageModifier mod : DamageModifierManager.modifiers(__instance)) {
-                tmp[i] = mod.atDamageGive(tmp[i], __instance.damageTypeForTurn, AbstractDungeon.getMonsters().monsters.get(i), __instance);
+                tmp[i] = mod.atDamageGive(tmp[i], __instance.damageTypeForTurn, m.get(i), __instance);
             }
         }
     }
@@ -43,10 +44,10 @@ public class DamageModifierPatches {
             }
         }
 
-        @SpireInsertPatch(locator = MultiDamageFinalLocator.class, localvars = {"tmp","i"})
-        public static void multi(AbstractCard __instance, AbstractMonster mo, float[] tmp, int i) {
+        @SpireInsertPatch(locator = MultiDamageFinalLocator.class, localvars = {"tmp","i","m"})
+        public static void multi(AbstractCard __instance, AbstractMonster mo, float[] tmp, int i, ArrayList<AbstractMonster> m) {
             for (AbstractDamageModifier mod : DamageModifierManager.modifiers(__instance)) {
-                tmp[i] = mod.atDamageFinalGive(tmp[i], __instance.damageTypeForTurn, AbstractDungeon.getMonsters().monsters.get(i), __instance);
+                tmp[i] = mod.atDamageFinalGive(tmp[i], __instance.damageTypeForTurn, m.get(i), __instance);
             }
         }
     }
