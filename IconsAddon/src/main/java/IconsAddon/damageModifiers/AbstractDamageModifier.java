@@ -1,5 +1,6 @@
 package IconsAddon.damageModifiers;
 
+import IconsAddon.icons.AbstractCustomIcon;
 import basemod.helpers.TooltipInfo;
 import com.megacrit.cardcrawl.actions.AbstractGameAction;
 import com.megacrit.cardcrawl.cards.AbstractCard;
@@ -69,6 +70,14 @@ public abstract class AbstractDamageModifier implements Comparable<AbstractDamag
 
     protected void addToBot(AbstractGameAction action) {
         AbstractDungeon.actionManager.addToBottom(action);
+    }
+
+    public AbstractCustomIcon getAccompanyingIcon() {
+        return null;
+    }
+
+    public boolean shouldPushIconToCard(AbstractCard card) {
+        return false;
     }
 
     @Override
