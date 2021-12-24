@@ -61,7 +61,7 @@ public class DescriptorAndTooltipPatches {
 
         @SpireInsertPatch(locator = Locator2.class, localvars = "tooltips")
         public static void part2(AbstractCard ___card, @ByRef List<TooltipInfo>[] tooltips) {
-            if (tooltips[0] == null && (DamageModifierManager.modifiers(___card).size() > 0 || BlockModifierManager.modifiers(___card).size() > 0 || AbstractDungeon.player.powers.stream().anyMatch(p -> p instanceof DamageModApplyingPower && ((DamageModApplyingPower) p).shouldPushMods(null, ___card, DamageModifierManager.modifiers(___card))))) {
+            if (tooltips[0] == null) {
                 tooltips[0] = new ArrayList<>();
             }
             for (AbstractDamageModifier mod : DamageModifierManager.modifiers(___card)) {
