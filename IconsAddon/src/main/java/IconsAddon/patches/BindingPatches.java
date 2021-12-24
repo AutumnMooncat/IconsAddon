@@ -3,7 +3,7 @@ package IconsAddon.patches;
 import IconsAddon.blockModifiers.AbstractBlockModifier;
 import IconsAddon.damageModifiers.AbstractDamageModifier;
 import IconsAddon.powers.OnCreateBlockContainerPower;
-import IconsAddon.powers.OnCreateDamageInfoPower;
+import IconsAddon.powers.DamageModApplyingPower;
 import IconsAddon.util.BlockContainer;
 import IconsAddon.util.BlockModifierManager;
 import IconsAddon.util.DamageModifierManager;
@@ -91,6 +91,9 @@ public class BindingPatches {
 
     @SpirePatch(clz = DamageInfo.class, method = "<ctor>", paramtypez = {AbstractCreature.class, int.class, DamageInfo.DamageType.class})
     private static class BindObjectToDamageInfo {
+
+        private static final ArrayList<AbstractDamageModifier> boundMods = new ArrayList<>();
+
         @SpirePostfixPatch()
         public static void PostfixMeToPiggybackBinding(DamageInfo __instance, AbstractCreature damageSource, int base, DamageInfo.DamageType type) {
             AbstractCard instigatorCard = null;
@@ -98,34 +101,64 @@ public class BindingPatches {
             AbstractGameAction a = AbstractDungeon.actionManager.currentAction;
             if (a != null && canPassInstigator) {
                 if (!BoundGameAction.actionDelayedDamageMods.get(a).isEmpty()) {
-                    DamageModifierManager.bindDamageMods(__instance, BoundGameAction.actionDelayedDamageMods.get(a).stream().filter(m -> m.affectsDamageType(type)).collect(Collectors.toList()));
+                    boundMods.addAll(BoundGameAction.actionDelayedDamageMods.get(a).stream().filter(m -> m.affectsDamageType(type)).collect(Collectors.toList()));
                     if (BoundGameAction.actionDelayedDirectlyBoundInstigator.get(a) instanceof AbstractCard) {
                         instigatorCard = BoundGameAction.actionDelayedCardInUse.get(a);
                     }
                 }
                 if (BoundGameAction.actionDelayedCardInUse.get(a) != null && a.source == damageSource) {
-                    DamageModifierManager.bindDamageMods(__instance, DamageModifierManager.modifiers(BoundGameAction.actionDelayedCardInUse.get(a)).stream().filter(m -> m.automaticBindingForCards && m.affectsDamageType(type)).collect(Collectors.toList()));
+                    boundMods.addAll(DamageModifierManager.modifiers(BoundGameAction.actionDelayedCardInUse.get(a)).stream().filter(m -> m.automaticBindingForCards && m.affectsDamageType(type)).collect(Collectors.toList()));
                     instigatorCard = BoundGameAction.actionDelayedCardInUse.get(a);
                 }
             }
             if (!directlyBoundDamageMods.isEmpty()) {
-                DamageModifierManager.bindDamageMods(__instance, directlyBoundDamageMods.stream().filter(m -> m.affectsDamageType(type)).collect(Collectors.toList()));
+                boundMods.addAll(directlyBoundDamageMods.stream().filter(m -> m.affectsDamageType(type)).collect(Collectors.toList()));
                 if (directlyBoundInstigator instanceof AbstractCard) {
                     instigatorCard = (AbstractCard) directlyBoundInstigator;
                 }
             }
             if (cardInUse != null) {
-                DamageModifierManager.bindDamageMods(__instance, DamageModifierManager.modifiers(cardInUse).stream().filter(m -> m.automaticBindingForCards && m.affectsDamageType(type)).collect(Collectors.toList()));
+                boundMods.addAll(DamageModifierManager.modifiers(cardInUse).stream().filter(m -> m.automaticBindingForCards && m.affectsDamageType(type)).collect(Collectors.toList()));
                 instigatorCard = cardInUse;
             }
             if (damageSource != null) {
                 for (AbstractPower p : damageSource.powers) {
-                    if (p instanceof OnCreateDamageInfoPower) {
-                        ((OnCreateDamageInfoPower) p).onCreateDamageInfo(__instance, instigatorCard);
+                    if (p instanceof DamageModApplyingPower && ((DamageModApplyingPower) p).shouldPushMods(__instance, instigatorCard, boundMods)) {
+                        boundMods.addAll(((DamageModApplyingPower) p).modsToPush(__instance, instigatorCard, boundMods));
+                        ((DamageModApplyingPower) p).onAddedDamageModsToDamageInfo(__instance, instigatorCard);
                     }
                 }
             }
+            DamageModifierManager.bindDamageMods(__instance, boundMods);
             DamageModifierManager.bindInstigatorCard(__instance, instigatorCard);
+            boundMods.clear();
+        }
+    }
+
+    @SpirePatch(clz = AbstractCard.class, method = "calculateCardDamage")
+    public static class AddTempModifiers {
+
+        private static final ArrayList<AbstractDamageModifier> pushedMods = new ArrayList<>();
+        private static final ArrayList<AbstractDamageModifier> inherentMods = new ArrayList<>();
+
+        @SpirePrefixPatch()
+        public static void addMods(AbstractCard __instance, AbstractMonster mo) {
+            inherentMods.addAll(DamageModifierManager.modifiers(__instance));
+            pushedMods.addAll(inherentMods);
+            for (AbstractPower p : AbstractDungeon.player.powers) {
+                if (p instanceof DamageModApplyingPower && ((DamageModApplyingPower) p).shouldPushMods(null, __instance, pushedMods)) {
+                    pushedMods.addAll(((DamageModApplyingPower) p).modsToPush(null, __instance, pushedMods));
+                }
+            }
+            pushedMods.removeAll(inherentMods);
+            inherentMods.clear();
+            DamageModifierManager.addModifiers(__instance, pushedMods);
+        }
+
+        @SpirePostfixPatch()
+        public static void removeMods(AbstractCard __instance, AbstractMonster mo) {
+            DamageModifierManager.removeModifiers(__instance, pushedMods);
+            pushedMods.clear();
         }
     }
 

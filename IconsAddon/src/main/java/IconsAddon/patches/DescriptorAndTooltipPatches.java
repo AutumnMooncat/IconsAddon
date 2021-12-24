@@ -2,6 +2,7 @@ package IconsAddon.patches;
 
 import IconsAddon.blockModifiers.AbstractBlockModifier;
 import IconsAddon.damageModifiers.AbstractDamageModifier;
+import IconsAddon.powers.DamageModApplyingPower;
 import IconsAddon.util.BlockModifierManager;
 import IconsAddon.util.DamageModifierManager;
 import basemod.abstracts.CustomCard;
@@ -11,7 +12,10 @@ import basemod.patches.com.megacrit.cardcrawl.screens.SingleCardViewPopup.Render
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.megacrit.cardcrawl.cards.AbstractCard;
+import com.megacrit.cardcrawl.core.CardCrawlGame;
+import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.helpers.PowerTip;
+import com.megacrit.cardcrawl.powers.AbstractPower;
 import javassist.CtBehavior;
 
 import java.util.ArrayList;
@@ -22,7 +26,7 @@ public class DescriptorAndTooltipPatches {
     public static class AddTooltipTop {
         @SpireInsertPatch(locator = Locator1.class, localvars = "tooltips")
         public static void part1(AbstractCard ___card, @ByRef List<TooltipInfo>[] tooltips) {
-            if ((DamageModifierManager.modifiers(___card).size() > 0 || BlockModifierManager.modifiers(___card).size() > 0) && tooltips[0] == null) {
+            if (tooltips[0] == null) {
                 tooltips[0] = new ArrayList<>();
             }
             for (AbstractDamageModifier mod : DamageModifierManager.modifiers(___card)) {
@@ -33,6 +37,17 @@ public class DescriptorAndTooltipPatches {
             for (AbstractBlockModifier mod : BlockModifierManager.modifiers(___card)) {
                 if (mod.getCustomTooltips() != null) {
                     tooltips[0].addAll(mod.getCustomTooltips());
+                }
+            }
+            if (AbstractDungeon.player != null && RenderElementsOnCardPatches.validLocation(___card)) {
+                for (AbstractPower p : AbstractDungeon.player.powers) {
+                    if (p instanceof DamageModApplyingPower && ((DamageModApplyingPower) p).shouldPushMods(null, ___card, DamageModifierManager.modifiers(___card))) {
+                        for (AbstractDamageModifier mod : ((DamageModApplyingPower) p).modsToPush(null, ___card, DamageModifierManager.modifiers(___card))) {
+                            if (mod.getCustomTooltips() != null) {
+                                tooltips[0].addAll(mod.getCustomTooltips());
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -46,7 +61,7 @@ public class DescriptorAndTooltipPatches {
 
         @SpireInsertPatch(locator = Locator2.class, localvars = "tooltips")
         public static void part2(AbstractCard ___card, @ByRef List<TooltipInfo>[] tooltips) {
-            if ((DamageModifierManager.modifiers(___card).size() > 0 || BlockModifierManager.modifiers(___card).size() > 0) && tooltips[0] == null) {
+            if (tooltips[0] == null && (DamageModifierManager.modifiers(___card).size() > 0 || BlockModifierManager.modifiers(___card).size() > 0 || AbstractDungeon.player.powers.stream().anyMatch(p -> p instanceof DamageModApplyingPower && ((DamageModApplyingPower) p).shouldPushMods(null, ___card, DamageModifierManager.modifiers(___card))))) {
                 tooltips[0] = new ArrayList<>();
             }
             for (AbstractDamageModifier mod : DamageModifierManager.modifiers(___card)) {
@@ -54,6 +69,17 @@ public class DescriptorAndTooltipPatches {
             }
             for (AbstractBlockModifier mod : BlockModifierManager.modifiers(___card)) {
                 tooltips[0].addAll(mod.getCustomTooltips());
+            }
+            if (AbstractDungeon.player != null && RenderElementsOnCardPatches.validLocation(___card)) {
+                for (AbstractPower p : AbstractDungeon.player.powers) {
+                    if (p instanceof DamageModApplyingPower && ((DamageModApplyingPower) p).shouldPushMods(null, ___card, DamageModifierManager.modifiers(___card))) {
+                        for (AbstractDamageModifier mod : ((DamageModApplyingPower) p).modsToPush(null, ___card, DamageModifierManager.modifiers(___card))) {
+                            if (mod.getCustomTooltips() != null) {
+                                tooltips[0].addAll(mod.getCustomTooltips());
+                            }
+                        }
+                    }
+                }
             }
         }
         private static class Locator2 extends SpireInsertLocator {
@@ -85,6 +111,19 @@ public class DescriptorAndTooltipPatches {
                 if (mod.getCustomTooltips() != null) {
                     for (TooltipInfo tip : mod.getCustomTooltips()) {
                         t[0].add(tip.toPowerTip());
+                    }
+                }
+            }
+            if (AbstractDungeon.player != null && RenderElementsOnCardPatches.validLocation(acard)) {
+                for (AbstractPower p : AbstractDungeon.player.powers) {
+                    if (p instanceof DamageModApplyingPower && ((DamageModApplyingPower) p).shouldPushMods(null, acard, DamageModifierManager.modifiers(acard))) {
+                        for (AbstractDamageModifier mod : ((DamageModApplyingPower) p).modsToPush(null, acard, DamageModifierManager.modifiers(acard))) {
+                            if (mod.getCustomTooltips() != null) {
+                                for (TooltipInfo tip : mod.getCustomTooltips()) {
+                                    t[0].add(tip.toPowerTip());
+                                }
+                            }
+                        }
                     }
                 }
             }
