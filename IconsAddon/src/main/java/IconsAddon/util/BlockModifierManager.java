@@ -15,17 +15,20 @@ import com.megacrit.cardcrawl.powers.AbstractPower;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.List;
 
 public class BlockModifierManager {
 
-    private static final HashMap<Object, ArrayList<AbstractBlockModifier>> boundBlockObjects = new HashMap<>();
-
-    //TODO - Clear the array?
-
     @SpirePatch(clz = AbstractCreature.class, method = SpirePatch.CLASS)
-    private static class BlockTypes {
+    public static class BlockTypes {
         public static SpireField<ArrayList<BlockContainer>> blockContainers = new SpireField<>(ArrayList::new);
+    }
+
+    public static class BlockModifierFields {
+        @SpirePatch(clz = AbstractCard.class, method = SpirePatch.CLASS)
+        public static class CardField {
+            public static final SpireField<List<AbstractBlockModifier>> blockModifiers = new SpireField<>(ArrayList::new);
+        }
     }
 
     public static void addBlockContainer(AbstractCreature owner, BlockContainer container) {
@@ -48,42 +51,30 @@ public class BlockModifierManager {
         }
     }
 
-    public static void addModifier(Object object, AbstractBlockModifier blockMod) {
-        if (!boundBlockObjects.containsKey(object)) {
-            boundBlockObjects.put(object, new ArrayList<>());
-        }
-        boundBlockObjects.get(object).add(blockMod);
-        Collections.sort(boundBlockObjects.get(object));
+    public static List<AbstractBlockModifier> modifiers(AbstractCard c) {
+        return BlockModifierFields.CardField.blockModifiers.get(c);
     }
 
-    public static void addModifiers(Object object, ArrayList<AbstractBlockModifier> blockMods) {
-        if (!boundBlockObjects.containsKey(object)) {
-            boundBlockObjects.put(object, new ArrayList<>());
-        }
-        boundBlockObjects.get(object).addAll(blockMods);
-        Collections.sort(boundBlockObjects.get(object));
+    public static void addModifier(AbstractCard card, AbstractBlockModifier blockMod) {
+        modifiers(card).add(blockMod);
+        Collections.sort(modifiers(card));
     }
 
-    public static ArrayList<AbstractBlockModifier> modifiers(Object object) {
-        return boundBlockObjects.getOrDefault(object, new ArrayList<>());
+    public static void addModifiers(AbstractCard card, ArrayList<AbstractBlockModifier> blockMods) {
+        modifiers(card).addAll(blockMods);
+        Collections.sort(modifiers(card));
     }
 
-    public static void removeModifier(Object object, AbstractBlockModifier blockMod) {
-        if (boundBlockObjects.containsKey(object)) {
-            boundBlockObjects.get(object).remove(blockMod);
-            Collections.sort(boundBlockObjects.get(object));
-        }
+    public static void removeModifier(AbstractCard card, AbstractBlockModifier blockMod) {
+        modifiers(card).remove(blockMod);
     }
 
-    public static void removeModifiers(Object object, ArrayList<AbstractBlockModifier> blockMods) {
-        if (boundBlockObjects.containsKey(object)) {
-            boundBlockObjects.get(object).removeAll(blockMods);
-            Collections.sort(boundBlockObjects.get(object));
-        }
+    public static void removeModifiers(AbstractCard card, ArrayList<AbstractBlockModifier> blockMods) {
+        modifiers(card).removeAll(blockMods);
     }
 
-    public static void removeAllModifiers(Object object) {
-        boundBlockObjects.remove(object);
+    public static void clearModifiers(AbstractCard card) {
+        modifiers(card).clear();
     }
 
     public static BlockContainer getTopBlockContainer(AbstractCreature owner) {
@@ -94,10 +85,18 @@ public class BlockModifierManager {
         return !BlockTypes.blockContainers.get(owner).isEmpty();
     }
 
-    public static void addCustomBlock(AbstractCreature owner, Object objectWithBlockMods, int amount) {
-        BindingPatches.directlyBoundBlockMods.addAll(modifiers(objectWithBlockMods));
+    public static void addCustomBlock(AbstractCreature owner, List<AbstractBlockModifier> mods, int amount) {
+        BindingPatches.directlyBoundBlockMods.addAll(mods);
         owner.addBlock(amount);
         BindingPatches.directlyBoundBlockMods.clear();
+    }
+
+    public static void addCustomBlock(AbstractCreature owner, AbstractCard card, int amount) {
+        addCustomBlock(owner, modifiers(card), amount);
+    }
+
+    public static void addCustomBlock(AbstractCreature owner, BlockModContainer container, int amount) {
+        addCustomBlock(owner, container.modifiers(), amount);
     }
 
     public static ArrayList<BlockContainer> blockContainers(AbstractCreature owner) {
