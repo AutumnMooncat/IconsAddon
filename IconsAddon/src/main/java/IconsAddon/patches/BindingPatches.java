@@ -5,6 +5,7 @@ import IconsAddon.damageModifiers.AbstractDamageModifier;
 import IconsAddon.powers.OnCreateBlockContainerPower;
 import IconsAddon.powers.DamageModApplyingPower;
 import IconsAddon.relics.DamageModApplyingRelic;
+import IconsAddon.relics.OnCreateBlockContainerRelic;
 import IconsAddon.util.BlockContainer;
 import IconsAddon.util.BlockModifierManager;
 import IconsAddon.util.DamageModifierManager;
@@ -206,6 +207,11 @@ public class BindingPatches {
             for (AbstractPower p : __instance.powers) {
                 if (p instanceof OnCreateBlockContainerPower) {
                     ((OnCreateBlockContainerPower) p).onCreateBlockContainer(blockSet, instigatorCard);
+                }
+            }
+            for (AbstractRelic r : AbstractDungeon.player.relics) {
+                if (r instanceof OnCreateBlockContainerRelic) {
+                    ((OnCreateBlockContainerRelic) r).onCreateBlockContainer(blockSet, instigatorCard);
                 }
             }
             ArrayList<AbstractBlockModifier> blockTypes = new ArrayList<>();
