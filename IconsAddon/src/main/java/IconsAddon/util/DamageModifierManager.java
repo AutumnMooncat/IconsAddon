@@ -8,35 +8,64 @@ import com.megacrit.cardcrawl.cards.DamageInfo;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 
 public class DamageModifierManager {
 
-    private static final HashMap<Object, List<AbstractDamageModifier>> boundDamageObjects = new HashMap<>();
-
-    //TODO - Clear the array?
-
     @SpirePatch(clz = DamageInfo.class, method = SpirePatch.CLASS)
-    private static class BoundDamageInfo {
+    public static class BoundDamageInfo {
         public static final SpireField<List<AbstractDamageModifier>> boundDamageMods = new SpireField<>(ArrayList::new);
-        public static final SpireField<AbstractCard> instigatorCard = new SpireField<>(() -> null);
+        public static final SpireField<Object> instigatingObject = new SpireField<>(() -> null);
     }
+
+    public static class DamageModifierFields {
+        @SpirePatch(clz = AbstractCard.class, method = SpirePatch.CLASS)
+        public static class CardField {
+            public static final SpireField<List<AbstractDamageModifier>> damageModifiers = new SpireField<>(ArrayList::new);
+        }
+
+//        @SpirePatch(clz = AbstractCardModifier.class, method = SpirePatch.CLASS)
+//        public static class CardModField {
+//            public static final SpireField<List<AbstractDamageModifier>> damageModifiers = new SpireField<>(ArrayList::new);
+//        }
+//
+//        @SpirePatch(clz = AbstractCreature.class, method = SpirePatch.CLASS)
+//        public static class CreatureField {
+//            public static final SpireField<List<AbstractDamageModifier>> damageModifiers = new SpireField<>(ArrayList::new);
+//        }
+//
+//        @SpirePatch(clz = AbstractOrb.class, method = SpirePatch.CLASS)
+//        public static class OrbField {
+//            public static final SpireField<List<AbstractDamageModifier>> damageModifiers = new SpireField<>(ArrayList::new);
+//        }
+//
+//        @SpirePatch(clz = AbstractPotion.class, method = SpirePatch.CLASS)
+//        public static class PotionField {
+//            public static final SpireField<List<AbstractDamageModifier>> damageModifiers = new SpireField<>(ArrayList::new);
+//        }
+//
+//        @SpirePatch(clz = AbstractPower.class, method = SpirePatch.CLASS)
+//        public static class PowerField {
+//            public static final SpireField<List<AbstractDamageModifier>> damageModifiers = new SpireField<>(ArrayList::new);
+//        }
+//
+//        @SpirePatch(clz = AbstractRelic.class, method = SpirePatch.CLASS)
+//        public static class RelicField {
+//            public static final SpireField<List<AbstractDamageModifier>> damageModifiers = new SpireField<>(ArrayList::new);
+//        }
+    }
+
 
     public static List<AbstractDamageModifier> getDamageMods(DamageInfo info) {
         return BoundDamageInfo.boundDamageMods.get(info);
     }
 
-    public static AbstractCard getInstigatorCard(DamageInfo info) {
-        return BoundDamageInfo.instigatorCard.get((info));
+    public static Object getInstigator(DamageInfo info) {
+        return BoundDamageInfo.instigatingObject.get((info));
     }
 
-    public static void bindInstigatorCard(DamageInfo info, AbstractCard c) {
-        BoundDamageInfo.instigatorCard.set(info, c);
-    }
-
-    public static void bindDamageModsFromObject(DamageInfo info, Object object) {
-        bindDamageMods(info, boundDamageObjects.get(object));
+    public static void bindInstigator(DamageInfo info, Object o) {
+        BoundDamageInfo.instigatingObject.set(info, o);
     }
 
     public static void bindDamageMods(DamageInfo info, List<AbstractDamageModifier> list) {
@@ -47,45 +76,62 @@ public class DamageModifierManager {
         }
     }
 
-    public static void addModifier(Object object, AbstractDamageModifier damageMod) {
-        if (!boundDamageObjects.containsKey(object)) {
-            boundDamageObjects.put(object, new ArrayList<>());
-        }
-        boundDamageObjects.get(object).add(damageMod);
-        Collections.sort(boundDamageObjects.get(object));
+    public static void bindDamageMods(DamageInfo info, AbstractCard card) {
+        bindDamageMods(info, modifiers(card));
     }
 
-    public static void addModifiers(Object object, List<AbstractDamageModifier> damageMods) {
-        if (!boundDamageObjects.containsKey(object)) {
-            boundDamageObjects.put(object, new ArrayList<>());
-        }
-        boundDamageObjects.get(object).addAll(damageMods);
-        Collections.sort(boundDamageObjects.get(object));
+    public static void bindDamageMods(DamageInfo info, DamageModContainer container) {
+        bindDamageMods(info, container.modifiers());
     }
 
-    public static List<AbstractDamageModifier> modifiers(Object object) {
-        if (boundDamageObjects.containsKey(object)) {
-            return boundDamageObjects.get(object);
-        }
-        return Collections.emptyList();
+    public static void addModifier(AbstractCard card, AbstractDamageModifier damageMod) {
+        modifiers(card).add(damageMod);
+        Collections.sort(modifiers(card));
     }
 
-    public static void removeModifier(Object object, AbstractDamageModifier damageMod) {
-        if (boundDamageObjects.containsKey(object)) {
-            boundDamageObjects.get(object).remove(damageMod);
-            Collections.sort(boundDamageObjects.get(object));
-        }
+    public static void addModifiers(AbstractCard card, List<AbstractDamageModifier> damageMods) {
+        modifiers(card).addAll(damageMods);
+        Collections.sort(modifiers(card));
     }
 
-    public static void removeModifiers(Object object, ArrayList<AbstractDamageModifier> damageMods) {
-        if (boundDamageObjects.containsKey(object)) {
-            boundDamageObjects.get(object).removeAll(damageMods);
-            Collections.sort(boundDamageObjects.get(object));
-        }
+    public static void removeModifier(AbstractCard card, AbstractDamageModifier damageMod) {
+        modifiers(card).remove(damageMod);
     }
 
-    public static void removeAllModifiers(Object object) {
-        boundDamageObjects.remove(object);
+    public static void removeModifiers(AbstractCard card, ArrayList<AbstractDamageModifier> damageMods) {
+        modifiers(card).removeAll(damageMods);
     }
+
+    public static void clearModifiers(AbstractCard card) {
+        modifiers(card).clear();
+    }
+
+    public static List<AbstractDamageModifier> modifiers(AbstractCard card) {
+        return DamageModifierFields.CardField.damageModifiers.get(card);
+    }
+
+//    public static List<AbstractDamageModifier> modifiers(AbstractCardModifier o) {
+//        return DamageModifierFields.CardModField.damageModifiers.get(o);
+//    }
+//
+//    public static List<AbstractDamageModifier> modifiers(AbstractCreature o) {
+//        return DamageModifierFields.CreatureField.damageModifiers.get(o);
+//    }
+//
+//    public static List<AbstractDamageModifier> modifiers(AbstractOrb o) {
+//        return DamageModifierFields.OrbField.damageModifiers.get(o);
+//    }
+//
+//    public static List<AbstractDamageModifier> modifiers(AbstractPotion o) {
+//        return DamageModifierFields.PotionField.damageModifiers.get(o);
+//    }
+//
+//    public static List<AbstractDamageModifier> modifiers(AbstractPower o) {
+//        return DamageModifierFields.PowerField.damageModifiers.get(o);
+//    }
+//
+//    public static List<AbstractDamageModifier> modifiers(AbstractRelic o) {
+//        return DamageModifierFields.RelicField.damageModifiers.get(o);
+//    }
 
 }

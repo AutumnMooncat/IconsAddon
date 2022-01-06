@@ -1,6 +1,7 @@
 package IconsAddon.patches;
 
 import IconsAddon.damageModifiers.AbstractDamageModifier;
+import IconsAddon.util.DamageModContainer;
 import IconsAddon.util.DamageModifierManager;
 import com.evacipated.cardcrawl.mod.stslib.patches.tempHp.PlayerDamage;
 import com.evacipated.cardcrawl.modthespire.lib.*;
@@ -78,9 +79,12 @@ public class DamageModifierPatches {
 
         @SpirePostfixPatch()
         public static void removeModsAfterUse(AbstractMonster __instance, DamageInfo info) {
-            Object obj = DamageModifierManager.getDamageMods(info);
-            if (obj != null) {
-                DamageModifierManager.modifiers(obj).removeIf(AbstractDamageModifier::removeWhenActivated);
+            Object obj = DamageModifierManager.getInstigator(info);
+            if (obj instanceof AbstractCard) {
+                DamageModifierManager.modifiers((AbstractCard) obj).removeIf(AbstractDamageModifier::removeWhenActivated);
+            }
+            if (obj instanceof DamageModContainer) {
+                ((DamageModContainer) obj).modifiers().removeIf(AbstractDamageModifier::removeWhenActivated);
             }
         }
     }
@@ -114,8 +118,12 @@ public class DamageModifierPatches {
         }
         @SpirePostfixPatch()
         public static void removeModsAfterUse(AbstractPlayer __instance, DamageInfo info) {
-            if (DamageModifierManager.getInstigatorCard(info) != null) {
-                DamageModifierManager.modifiers(DamageModifierManager.getInstigatorCard(info)).removeIf(AbstractDamageModifier::removeWhenActivated);
+            Object obj = DamageModifierManager.getInstigator(info);
+            if (obj instanceof AbstractCard) {
+                DamageModifierManager.modifiers((AbstractCard) obj).removeIf(AbstractDamageModifier::removeWhenActivated);
+            }
+            if (obj instanceof DamageModContainer) {
+                ((DamageModContainer) obj).modifiers().removeIf(AbstractDamageModifier::removeWhenActivated);
             }
         }
     }

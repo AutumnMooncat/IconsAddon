@@ -4,6 +4,7 @@ import IconsAddon.blockModifiers.AbstractBlockModifier;
 import IconsAddon.damageModifiers.AbstractDamageModifier;
 import IconsAddon.powers.OnCreateBlockContainerPower;
 import IconsAddon.powers.DamageModApplyingPower;
+import IconsAddon.relics.DamageModApplyingRelic;
 import IconsAddon.util.BlockContainer;
 import IconsAddon.util.BlockModifierManager;
 import IconsAddon.util.DamageModifierManager;
@@ -19,6 +20,7 @@ import com.megacrit.cardcrawl.core.AbstractCreature;
 import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import com.megacrit.cardcrawl.powers.AbstractPower;
+import com.megacrit.cardcrawl.relics.AbstractRelic;
 import javassist.CtBehavior;
 
 import java.util.ArrayList;
@@ -129,8 +131,14 @@ public class BindingPatches {
                     }
                 }
             }
+            for (AbstractRelic r : AbstractDungeon.player.relics) {
+                if (r instanceof DamageModApplyingRelic && ((DamageModApplyingRelic) r).shouldPushMods(__instance, instigatorCard, boundMods)) {
+                    boundMods.addAll(((DamageModApplyingRelic) r).modsToPush(__instance, instigatorCard, boundMods));
+                    ((DamageModApplyingRelic) r).onAddedDamageModsToDamageInfo(__instance, instigatorCard);
+                }
+            }
             DamageModifierManager.bindDamageMods(__instance, boundMods);
-            DamageModifierManager.bindInstigatorCard(__instance, instigatorCard);
+            DamageModifierManager.bindInstigator(__instance, instigatorCard);
             boundMods.clear();
         }
     }
