@@ -60,7 +60,6 @@ public class IconsAddonMod implements PostInitializeSubscriber, EditStringsSubsc
     public static void initialize() {
         logger.info("========================= Initializing Icons Addon. =========================");
         IconsAddonMod iconsAddonMod = new IconsAddonMod();
-        CustomIconHelper.addDefaultIcons();
         logger.info("========================= /Icons Addon Initialized/ =========================");
     }
     

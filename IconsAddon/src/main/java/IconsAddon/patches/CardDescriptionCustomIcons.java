@@ -47,10 +47,6 @@ public class CardDescriptionCustomIcons {
                 }
                 AbstractCustomIcon icon = CustomIconHelper.getIcon(key);
                 if (icon != null) {
-                    if (CustomIconHelper.isCustomIcon(key) && !reinit.contains(__instance)) {
-                        reinit.add(__instance);
-                        __instance.initializeDescription();
-                    }
                     gl.width = CARD_ENERGY_IMG_WIDTH * __instance.drawScale;
                     renderSmallIcon(__instance, sb, icon,
                             (start_x[0] - __instance.current_x) / Settings.scale / __instance.drawScale,
