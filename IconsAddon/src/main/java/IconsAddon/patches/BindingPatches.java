@@ -39,7 +39,7 @@ public class BindingPatches {
     private static boolean canPassInstigator = true;
 
     @SpirePatch(clz = AbstractGameAction.class, method = SpirePatch.CLASS)
-    public static class BoundGameAction {
+    public static class BoundGameActionFields {
         public static SpireField<Object> actionDelayedDirectlyBoundInstigator = new SpireField<>(() -> null);
         public static SpireField<AbstractCard> actionDelayedCardInUse = new SpireField<>(() -> null);
         public static SpireField<ArrayList<AbstractDamageModifier>> actionDelayedDamageMods = new SpireField<>(ArrayList::new);
@@ -82,12 +82,12 @@ public class BindingPatches {
             //When our action is added to the queue, see if there is an active object in use that caused this to happen
             if (cardInUse != null && !(action instanceof ApplyPowerAction)) {
                 //If so, this is our instigator object, we need to add any non-innate card mods
-                BoundGameAction.actionDelayedCardInUse.set(action, cardInUse);
+                BoundGameActionFields.actionDelayedCardInUse.set(action, cardInUse);
             }
             //Daisy chain our actions if we can
             AbstractGameAction a = AbstractDungeon.actionManager.currentAction;
-            if (a != null && BoundGameAction.actionDelayedCardInUse.get(a) != null && canPassInstigator) {
-                BoundGameAction.actionDelayedCardInUse.set(action, BoundGameAction.actionDelayedCardInUse.get(a));
+            if (a != null && BoundGameActionFields.actionDelayedCardInUse.get(a) != null && canPassInstigator) {
+                BoundGameActionFields.actionDelayedCardInUse.set(action, BoundGameActionFields.actionDelayedCardInUse.get(a));
             }
         }
     }
@@ -99,47 +99,47 @@ public class BindingPatches {
 
         @SpirePostfixPatch()
         public static void PostfixMeToPiggybackBinding(DamageInfo __instance, AbstractCreature damageSource, int base, DamageInfo.DamageType type) {
-            AbstractCard instigatorCard = null;
+            Object instigator = null;
             //Grab the action currently running, as this is what was processing when our damage info was created
             AbstractGameAction a = AbstractDungeon.actionManager.currentAction;
             if (a != null && canPassInstigator) {
-                if (!BoundGameAction.actionDelayedDamageMods.get(a).isEmpty()) {
-                    boundMods.addAll(BoundGameAction.actionDelayedDamageMods.get(a).stream().filter(m -> m.affectsDamageType(type)).collect(Collectors.toList()));
-                    if (BoundGameAction.actionDelayedDirectlyBoundInstigator.get(a) instanceof AbstractCard) {
-                        instigatorCard = BoundGameAction.actionDelayedCardInUse.get(a);
+                if (!BoundGameActionFields.actionDelayedDamageMods.get(a).isEmpty()) {
+                    boundMods.addAll(BoundGameActionFields.actionDelayedDamageMods.get(a).stream().filter(m -> m.affectsDamageType(type)).collect(Collectors.toList()));
+                    if (BoundGameActionFields.actionDelayedDirectlyBoundInstigator.get(a) != null) {
+                        instigator = BoundGameActionFields.actionDelayedDirectlyBoundInstigator.get(a);
                     }
                 }
-                if (BoundGameAction.actionDelayedCardInUse.get(a) != null && a.source == damageSource) {
-                    boundMods.addAll(DamageModifierManager.modifiers(BoundGameAction.actionDelayedCardInUse.get(a)).stream().filter(m -> m.automaticBindingForCards && m.affectsDamageType(type)).collect(Collectors.toList()));
-                    instigatorCard = BoundGameAction.actionDelayedCardInUse.get(a);
+                if (BoundGameActionFields.actionDelayedCardInUse.get(a) != null && a.source == damageSource) {
+                    boundMods.addAll(DamageModifierManager.modifiers(BoundGameActionFields.actionDelayedCardInUse.get(a)).stream().filter(m -> m.automaticBindingForCards && m.affectsDamageType(type)).collect(Collectors.toList()));
+                    instigator = BoundGameActionFields.actionDelayedCardInUse.get(a);
                 }
             }
             if (!directlyBoundDamageMods.isEmpty()) {
                 boundMods.addAll(directlyBoundDamageMods.stream().filter(m -> m.affectsDamageType(type)).collect(Collectors.toList()));
-                if (directlyBoundInstigator instanceof AbstractCard) {
-                    instigatorCard = (AbstractCard) directlyBoundInstigator;
+                if (directlyBoundInstigator != null) {
+                    instigator = directlyBoundInstigator;
                 }
             }
             if (cardInUse != null) {
                 boundMods.addAll(DamageModifierManager.modifiers(cardInUse).stream().filter(m -> m.automaticBindingForCards && m.affectsDamageType(type)).collect(Collectors.toList()));
-                instigatorCard = cardInUse;
+                instigator = cardInUse;
             }
             if (damageSource != null) {
                 for (AbstractPower p : damageSource.powers) {
-                    if (p instanceof DamageModApplyingPower && ((DamageModApplyingPower) p).shouldPushMods(__instance, instigatorCard, boundMods)) {
-                        boundMods.addAll(((DamageModApplyingPower) p).modsToPush(__instance, instigatorCard, boundMods));
-                        ((DamageModApplyingPower) p).onAddedDamageModsToDamageInfo(__instance, instigatorCard);
+                    if (p instanceof DamageModApplyingPower && ((DamageModApplyingPower) p).shouldPushMods(__instance, instigator, boundMods)) {
+                        boundMods.addAll(((DamageModApplyingPower) p).modsToPush(__instance, instigator, boundMods));
+                        ((DamageModApplyingPower) p).onAddedDamageModsToDamageInfo(__instance, instigator);
                     }
                 }
             }
             for (AbstractRelic r : AbstractDungeon.player.relics) {
-                if (r instanceof DamageModApplyingRelic && ((DamageModApplyingRelic) r).shouldPushMods(__instance, instigatorCard, boundMods)) {
-                    boundMods.addAll(((DamageModApplyingRelic) r).modsToPush(__instance, instigatorCard, boundMods));
-                    ((DamageModApplyingRelic) r).onAddedDamageModsToDamageInfo(__instance, instigatorCard);
+                if (r instanceof DamageModApplyingRelic && ((DamageModApplyingRelic) r).shouldPushMods(__instance, instigator, boundMods)) {
+                    boundMods.addAll(((DamageModApplyingRelic) r).modsToPush(__instance, instigator, boundMods));
+                    ((DamageModApplyingRelic) r).onAddedDamageModsToDamageInfo(__instance, instigator);
                 }
             }
             DamageModifierManager.bindDamageMods(__instance, boundMods);
-            DamageModifierManager.bindInstigator(__instance, instigatorCard);
+            DamageModifierManager.bindInstigator(__instance, instigator);
             boundMods.clear();
         }
     }
@@ -176,21 +176,21 @@ public class BindingPatches {
         static final HashSet<AbstractBlockModifier> blockSet = new HashSet<>();
         @SpireInsertPatch(locator = CreatureAddBlockLocator.class, localvars = "tmp")
         public static void pls(AbstractCreature __instance, int amount, float tmp) {
-            AbstractCard instigatorCard = null;
+            Object instigator = null;
             //Grab the action currently running, as this is what was processing when our block method was called
             AbstractGameAction a = AbstractDungeon.actionManager.currentAction;
             if (a != null) {
                 //If the action is not null, see if it has an instigator object
-                if (!BoundGameAction.actionDelayedBlockMods.get(a).isEmpty()) {
-                    blockSet.addAll(BoundGameAction.actionDelayedBlockMods.get(a));
+                if (!BoundGameActionFields.actionDelayedBlockMods.get(a).isEmpty()) {
+                    blockSet.addAll(BoundGameActionFields.actionDelayedBlockMods.get(a));
                 }
-                if (BoundGameAction.actionDelayedCardInUse.get(a) != null) {
-                    for (AbstractBlockModifier m : BlockModifierManager.modifiers(BoundGameAction.actionDelayedCardInUse.get(a))) {
+                if (BoundGameActionFields.actionDelayedCardInUse.get(a) != null) {
+                    for (AbstractBlockModifier m : BlockModifierManager.modifiers(BoundGameActionFields.actionDelayedCardInUse.get(a))) {
                         if (m.automaticBindingForCards) {
                             blockSet.add(m);
                         }
                     }
-                    instigatorCard = BoundGameAction.actionDelayedCardInUse.get(a);
+                    instigator = BoundGameActionFields.actionDelayedCardInUse.get(a);
                 }
             }
             if (!directlyBoundBlockMods.isEmpty()) {
@@ -202,16 +202,16 @@ public class BindingPatches {
                         blockSet.add(m);
                     }
                 }
-                instigatorCard = cardInUse;
+                instigator = cardInUse;
             }
             for (AbstractPower p : __instance.powers) {
                 if (p instanceof OnCreateBlockContainerPower) {
-                    ((OnCreateBlockContainerPower) p).onCreateBlockContainer(blockSet, instigatorCard);
+                    ((OnCreateBlockContainerPower) p).onCreateBlockContainer(blockSet, instigator);
                 }
             }
             for (AbstractRelic r : AbstractDungeon.player.relics) {
                 if (r instanceof OnCreateBlockContainerRelic) {
-                    ((OnCreateBlockContainerRelic) r).onCreateBlockContainer(blockSet, instigatorCard);
+                    ((OnCreateBlockContainerRelic) r).onCreateBlockContainer(blockSet, instigator);
                 }
             }
             ArrayList<AbstractBlockModifier> blockTypes = new ArrayList<>();

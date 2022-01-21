@@ -6,22 +6,24 @@ import java.util.*;
 
 public class DamageModContainer {
     private final List<AbstractDamageModifier> damageModifiers;
+    private final Object instigator;
 
-    public DamageModContainer() {
-        this(new ArrayList<>());
+    public DamageModContainer(Object instigator, AbstractDamageModifier... damageModifiers) {
+        this(instigator, new ArrayList<>(Arrays.asList(damageModifiers)));
     }
 
-    public DamageModContainer(AbstractDamageModifier mod) {
-        this(new ArrayList<>(Collections.singletonList(mod)));
-    }
-
-    public DamageModContainer(List<AbstractDamageModifier> mods) {
-        damageModifiers = mods;
-        Collections.sort(damageModifiers);
+    public DamageModContainer(Object instigator, List<AbstractDamageModifier> damageModifiers) {
+        this.instigator = instigator;
+        this.damageModifiers = damageModifiers;
+        Collections.sort(this.damageModifiers);
     }
 
     public List<AbstractDamageModifier> modifiers() {
         return damageModifiers;
+    }
+
+    public Object instigator() {
+        return instigator;
     }
 
     public void addModifier(AbstractDamageModifier damageMod) {

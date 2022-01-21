@@ -35,7 +35,7 @@ public class DamageModifierHelper {
 
     public static DamageInfo makeBoundDamageInfo(DamageModContainer o, AbstractCreature damageSource, int base, DamageInfo.DamageType type) {
         //Set the directly bound instigator before creating the damage info
-        BindingPatches.directlyBoundInstigator = o;
+        BindingPatches.directlyBoundInstigator = o.instigator();
         DamageInfo di = makeBoundDamageInfo(o.modifiers(), damageSource, base, type);
         //Unset it once we are done, as it has already been loaded into the damage info
         BindingPatches.directlyBoundInstigator = null;
@@ -43,16 +43,16 @@ public class DamageModifierHelper {
     }
 
     public static void bindAction(List<AbstractDamageModifier> mods, AbstractGameAction action) {
-        BindingPatches.BoundGameAction.actionDelayedDamageMods.get(action).addAll(mods);
+        BindingPatches.BoundGameActionFields.actionDelayedDamageMods.get(action).addAll(mods);
     }
 
     public static void bindAction(AbstractCard o, AbstractGameAction action) {
-        BindingPatches.BoundGameAction.actionDelayedDirectlyBoundInstigator.set(action, o);
+        BindingPatches.BoundGameActionFields.actionDelayedDirectlyBoundInstigator.set(action, o);
         bindAction(DamageModifierManager.modifiers(o), action);
     }
 
     public static void bindAction(DamageModContainer o, AbstractGameAction action) {
-        BindingPatches.BoundGameAction.actionDelayedDirectlyBoundInstigator.set(action, o);
+        BindingPatches.BoundGameActionFields.actionDelayedDirectlyBoundInstigator.set(action, o.instigator());
         bindAction(o.modifiers(), action);
     }
 

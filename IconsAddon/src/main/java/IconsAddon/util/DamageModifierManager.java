@@ -13,7 +13,7 @@ import java.util.List;
 public class DamageModifierManager {
 
     @SpirePatch(clz = DamageInfo.class, method = SpirePatch.CLASS)
-    public static class BoundDamageInfo {
+    public static class BoundDamageInfoFields {
         public static final SpireField<List<AbstractDamageModifier>> boundDamageMods = new SpireField<>(ArrayList::new);
         public static final SpireField<Object> instigatingObject = new SpireField<>(() -> null);
     }
@@ -57,21 +57,21 @@ public class DamageModifierManager {
 
 
     public static List<AbstractDamageModifier> getDamageMods(DamageInfo info) {
-        return BoundDamageInfo.boundDamageMods.get(info);
+        return BoundDamageInfoFields.boundDamageMods.get(info);
     }
 
     public static Object getInstigator(DamageInfo info) {
-        return BoundDamageInfo.instigatingObject.get((info));
+        return BoundDamageInfoFields.instigatingObject.get((info));
     }
 
     public static void bindInstigator(DamageInfo info, Object o) {
-        BoundDamageInfo.instigatingObject.set(info, o);
+        BoundDamageInfoFields.instigatingObject.set(info, o);
     }
 
     public static void bindDamageMods(DamageInfo info, List<AbstractDamageModifier> list) {
         for (AbstractDamageModifier m : list) {
-            if (!BoundDamageInfo.boundDamageMods.get(info).contains(m)) {
-                BoundDamageInfo.boundDamageMods.get(info).add(m);
+            if (!BoundDamageInfoFields.boundDamageMods.get(info).contains(m)) {
+                BoundDamageInfoFields.boundDamageMods.get(info).add(m);
             }
         }
     }
