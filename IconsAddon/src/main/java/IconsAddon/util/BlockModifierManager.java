@@ -85,18 +85,20 @@ public class BlockModifierManager {
         return !BlockTypes.blockContainers.get(owner).isEmpty();
     }
 
-    public static void addCustomBlock(AbstractCreature owner, List<AbstractBlockModifier> mods, int amount) {
+    public static void addCustomBlock(Object instigator, List<AbstractBlockModifier> mods, AbstractCreature owner, int amount) {
+        BindingPatches.directlyBoundInstigator = instigator;
         BindingPatches.directlyBoundBlockMods.addAll(mods);
         owner.addBlock(amount);
         BindingPatches.directlyBoundBlockMods.clear();
+        BindingPatches.directlyBoundInstigator = null;
     }
 
-    public static void addCustomBlock(AbstractCreature owner, AbstractCard card, int amount) {
-        addCustomBlock(owner, modifiers(card), amount);
+    public static void addCustomBlock(AbstractCard card, AbstractCreature owner,  int amount) {
+        addCustomBlock(card, modifiers(card), owner, amount);
     }
 
-    public static void addCustomBlock(AbstractCreature owner, BlockModContainer container, int amount) {
-        addCustomBlock(owner, container.modifiers(), amount);
+    public static void addCustomBlock(BlockModContainer container, AbstractCreature owner,  int amount) {
+        addCustomBlock(container.instigator(), container.modifiers(), owner, amount);
     }
 
     public static ArrayList<BlockContainer> blockContainers(AbstractCreature owner) {

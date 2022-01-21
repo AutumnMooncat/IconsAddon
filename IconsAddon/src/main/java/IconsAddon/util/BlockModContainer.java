@@ -1,51 +1,53 @@
 package IconsAddon.util;
 
 import IconsAddon.blockModifiers.AbstractBlockModifier;
-import IconsAddon.damageModifiers.AbstractDamageModifier;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class BlockModContainer {
-    private final List<AbstractBlockModifier> damageModifiers;
+    private final List<AbstractBlockModifier> blockModifiers;
+    private final Object instigator;
 
-    public BlockModContainer() {
-        this(new ArrayList<>());
+    public BlockModContainer(Object instigator, AbstractBlockModifier... blockModifiers) {
+        this(instigator, new ArrayList<>(Arrays.asList(blockModifiers)));
     }
 
-    public BlockModContainer(AbstractBlockModifier mod) {
-        this(new ArrayList<>(Collections.singletonList(mod)));
-    }
-
-    public BlockModContainer(List<AbstractBlockModifier> mods) {
-        damageModifiers = mods;
-        Collections.sort(damageModifiers);
+    public BlockModContainer(Object instigator, List<AbstractBlockModifier> blockModifiers) {
+        this.instigator = instigator;
+        this.blockModifiers = blockModifiers;
+        Collections.sort(this.blockModifiers);
     }
 
     public List<AbstractBlockModifier> modifiers() {
-        return damageModifiers;
+        return blockModifiers;
     }
 
-    public void addModifier(AbstractBlockModifier damageMod) {
-        damageModifiers.add(damageMod);
-        Collections.sort(damageModifiers);
+    public Object instigator() {
+        return instigator;
     }
 
-    public void addModifiers(List<AbstractBlockModifier> damageMods) {
-        damageModifiers.addAll(damageMods);
-        Collections.sort(damageModifiers);
+    public void addModifier(AbstractBlockModifier blockMod) {
+        blockModifiers.add(blockMod);
+        Collections.sort(blockModifiers);
     }
 
-    public void removeModifier(AbstractBlockModifier damageMod) {
-        damageModifiers.remove(damageMod);
+    public void addModifiers(List<AbstractBlockModifier> blockMods) {
+        blockModifiers.addAll(blockMods);
+        Collections.sort(blockModifiers);
     }
 
-    public void removeModifiers(ArrayList<AbstractBlockModifier> damageMods) {
-        damageModifiers.removeAll(damageMods);
+    public void removeModifier(AbstractBlockModifier blockMod) {
+        blockModifiers.remove(blockMod);
+    }
+
+    public void removeModifiers(ArrayList<AbstractBlockModifier> blockMods) {
+        blockModifiers.removeAll(blockMods);
     }
 
     public void clearModifiers() {
-        damageModifiers.clear();
+        blockModifiers.clear();
     }
 }

@@ -195,6 +195,9 @@ public class BindingPatches {
             }
             if (!directlyBoundBlockMods.isEmpty()) {
                 blockSet.addAll(directlyBoundBlockMods);
+                if (directlyBoundInstigator != null) {
+                    instigator = directlyBoundInstigator;
+                }
             }
             if (cardInUse != null) {
                 for (AbstractBlockModifier m : BlockModifierManager.modifiers(cardInUse)) {
