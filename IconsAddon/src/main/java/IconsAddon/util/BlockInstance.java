@@ -13,7 +13,7 @@ import com.megacrit.cardcrawl.localization.UIStrings;
 
 import java.util.ArrayList;
 
-public class BlockContainer implements Comparable<BlockContainer> {
+public class BlockInstance implements Comparable<BlockInstance> {
     private static final String ID = IconsAddonMod.makeID("BlockContainer");
     private static final UIStrings strings = CardCrawlGame.languagePack.getUIString(ID);
     private final ArrayList<AbstractBlockModifier> containedBlockTypes;
@@ -23,13 +23,13 @@ public class BlockContainer implements Comparable<BlockContainer> {
     private Color textColor;
     private Texture blockImage = ImageMaster.BLOCK_ICON;
 
-    public BlockContainer(AbstractCreature owner, int blockAmount, ArrayList<AbstractBlockModifier> blockTypes) {
+    public BlockInstance(AbstractCreature owner, int blockAmount, ArrayList<AbstractBlockModifier> blockTypes) {
         this.owner = owner;
         this.blockAmount = blockAmount;
         this.containedBlockTypes = blockTypes;
         for (AbstractBlockModifier m : containedBlockTypes) {
             m.setOwner(owner);
-            m.setContainer(this);
+            m.setInstance(this);
             if (m.blockImageColor() != null) {
                 blockColor = m.blockImageColor();
             }
@@ -116,7 +116,7 @@ public class BlockContainer implements Comparable<BlockContainer> {
         return ret;
     }
 
-    public boolean containsSameBlockTypes(BlockContainer b) {
+    public boolean containsSameBlockTypes(BlockInstance b) {
         ArrayList<Class<?>> comp = new ArrayList<>();
         for (AbstractBlockModifier m : containedBlockTypes) {
             comp.add(m.getClass());
@@ -150,7 +150,7 @@ public class BlockContainer implements Comparable<BlockContainer> {
     }
 
     @Override
-    public int compareTo(BlockContainer o) {
+    public int compareTo(BlockInstance o) {
         return this.computePriority() - o.computePriority();
     }
 }

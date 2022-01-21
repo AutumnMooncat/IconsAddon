@@ -21,7 +21,7 @@ public class BlockModifierManager {
 
     @SpirePatch(clz = AbstractCreature.class, method = SpirePatch.CLASS)
     public static class BlockTypes {
-        public static SpireField<ArrayList<BlockContainer>> blockContainers = new SpireField<>(ArrayList::new);
+        public static SpireField<ArrayList<BlockInstance>> blockInstances = new SpireField<>(ArrayList::new);
     }
 
     public static class BlockModifierFields {
@@ -31,23 +31,23 @@ public class BlockModifierManager {
         }
     }
 
-    public static void addBlockContainer(AbstractCreature owner, BlockContainer container) {
+    public static void addBlockInstance(AbstractCreature owner, BlockInstance instance) {
         boolean stacked = false;
-        for (BlockContainer b : BlockTypes.blockContainers.get(owner)) {
-            if (b.containsSameBlockTypes(container) && b.shouldStack() && container.shouldStack()) {
-                b.setBlockAmount(b.getBlockAmount()+container.getBlockAmount());
+        for (BlockInstance b : BlockTypes.blockInstances.get(owner)) {
+            if (b.containsSameBlockTypes(instance) && b.shouldStack() && instance.shouldStack()) {
+                b.setBlockAmount(b.getBlockAmount()+instance.getBlockAmount());
                 for (AbstractBlockModifier m : b.getBlockTypes()) {
-                    m.onStack(container.getBlockAmount());
+                    m.onStack(instance.getBlockAmount());
                 }
                 stacked = true;
             }
         }
         if (!stacked) {
-            for (AbstractBlockModifier m : container.getBlockTypes()) {
+            for (AbstractBlockModifier m : instance.getBlockTypes()) {
                 m.onApplication();
             }
-            BlockTypes.blockContainers.get(owner).add(0, container);
-            Collections.sort(BlockTypes.blockContainers.get(owner));
+            BlockTypes.blockInstances.get(owner).add(0, instance);
+            Collections.sort(BlockTypes.blockInstances.get(owner));
         }
     }
 
@@ -77,12 +77,12 @@ public class BlockModifierManager {
         modifiers(card).clear();
     }
 
-    public static BlockContainer getTopBlockContainer(AbstractCreature owner) {
-        return BlockTypes.blockContainers.get(owner).get(0);
+    public static BlockInstance getTopBlockInstance(AbstractCreature owner) {
+        return BlockTypes.blockInstances.get(owner).get(0);
     }
 
     public static boolean hasCustomBlockType(AbstractCreature owner) {
-        return !BlockTypes.blockContainers.get(owner).isEmpty();
+        return !BlockTypes.blockInstances.get(owner).isEmpty();
     }
 
     public static void addCustomBlock(Object instigator, List<AbstractBlockModifier> mods, AbstractCreature owner, int amount) {
@@ -97,36 +97,36 @@ public class BlockModifierManager {
         addCustomBlock(card, modifiers(card), owner, amount);
     }
 
-    public static void addCustomBlock(BlockModContainer container, AbstractCreature owner,  int amount) {
-        addCustomBlock(container.instigator(), container.modifiers(), owner, amount);
+    public static void addCustomBlock(BlockModContainer instance, AbstractCreature owner,  int amount) {
+        addCustomBlock(instance.instigator(), instance.modifiers(), owner, amount);
     }
 
-    public static ArrayList<BlockContainer> blockContainers(AbstractCreature owner) {
-        return BlockTypes.blockContainers.get(owner);
+    public static ArrayList<BlockInstance> blockInstances(AbstractCreature owner) {
+        return BlockTypes.blockInstances.get(owner);
     }
 
-    public static void reduceSpecificBlockType(BlockContainer container, int amount) {
-        int toRemove = Math.min(container.getBlockAmount(), amount);
-        BlockModifierPatches.specificContainerToReduce = container;
-        container.getOwner().loseBlock(toRemove);
+    public static void reduceSpecificBlockType(BlockInstance instance, int amount) {
+        int toRemove = Math.min(instance.getBlockAmount(), amount);
+        BlockModifierPatches.specificInstanceToReduce = instance;
+        instance.getOwner().loseBlock(toRemove);
     }
 
-    public static void removeSpecificBlockType(BlockContainer container) {
-        BlockModifierPatches.specificContainerToReduce = container;
-        container.getOwner().loseBlock(container.getBlockAmount());
+    public static void removeSpecificBlockType(BlockInstance instance) {
+        BlockModifierPatches.specificInstanceToReduce = instance;
+        instance.getOwner().loseBlock(instance.getBlockAmount());
     }
 
-    public static void removeEmptyBlockContainers(AbstractCreature owner) {
-        BlockModifierManager.blockContainers(owner).removeIf(b -> b.getBlockAmount() <= 0);
+    public static void removeEmptyBlockInstances(AbstractCreature owner) {
+        BlockModifierManager.blockInstances(owner).removeIf(b -> b.getBlockAmount() <= 0);
     }
 
-    public static void removeAllBlockContainers(AbstractCreature owner) {
-        BlockTypes.blockContainers.get(owner).clear();
+    public static void removeAllBlockInstances(AbstractCreature owner) {
+        BlockTypes.blockInstances.get(owner).clear();
     }
 
     public static int getBlockRetValBasedOnRemainingAmounts(AbstractCreature owner) {
         int ret = 0;
-        for (BlockContainer b : blockContainers(owner)) {
+        for (BlockInstance b : blockInstances(owner)) {
             ret += b.getBlockAmount();
         }
         return owner.currentBlock - ret;
@@ -141,7 +141,7 @@ public class BlockModifierManager {
     }
 
     public static void atEndOfRound(AbstractCreature owner) {
-        for (BlockContainer b : blockContainers(owner)) {
+        for (BlockInstance b : blockInstances(owner)) {
             for (AbstractBlockModifier m : b.getBlockTypes()) {
                 m.atEndOfRound();
             }
@@ -149,7 +149,7 @@ public class BlockModifierManager {
     }
 
     public static float atDamageReceive(AbstractCreature owner, float damage, DamageInfo.DamageType type, AbstractCreature source) {
-        for (BlockContainer b : blockContainers(owner)) {
+        for (BlockInstance b : blockInstances(owner)) {
             for (AbstractBlockModifier m : b.getBlockTypes()) {
                 damage = m.atDamageReceive(damage, type, source);
             }
@@ -158,7 +158,7 @@ public class BlockModifierManager {
     }
 
     public static float atDamageFinalReceive(AbstractCreature owner, float damage, DamageInfo.DamageType type, AbstractCreature source) {
-        for (BlockContainer b : blockContainers(owner)) {
+        for (BlockInstance b : blockInstances(owner)) {
             for (AbstractBlockModifier m : b.getBlockTypes()) {
                 damage = m.atDamageFinalReceive(damage, type, source);
             }
@@ -167,7 +167,7 @@ public class BlockModifierManager {
     }
 
     public static float atDamageGive(AbstractCreature owner, float damage, DamageInfo.DamageType type, AbstractCreature target, AbstractCard card) {
-        for (BlockContainer b : blockContainers(owner)) {
+        for (BlockInstance b : blockInstances(owner)) {
             for (AbstractBlockModifier m : b.getBlockTypes()) {
                 damage = m.atDamageGive(damage, type, target, card);
             }
@@ -176,7 +176,7 @@ public class BlockModifierManager {
     }
 
     public static float atDamageFinalGive(AbstractCreature owner, float damage, DamageInfo.DamageType type, AbstractCreature target, AbstractCard card) {
-        for (BlockContainer b : blockContainers(owner)) {
+        for (BlockInstance b : blockInstances(owner)) {
             for (AbstractBlockModifier m : b.getBlockTypes()) {
                 damage = m.atDamageFinalGive(damage, type, target, card);
             }
@@ -185,7 +185,7 @@ public class BlockModifierManager {
     }
 
     public static int onHeal(AbstractCreature owner, int healAmount) {
-        for (BlockContainer b : blockContainers(owner)) {
+        for (BlockInstance b : blockInstances(owner)) {
             for (AbstractBlockModifier m : b.getBlockTypes()) {
                 healAmount = m.onHeal(healAmount);
             }
@@ -194,7 +194,7 @@ public class BlockModifierManager {
     }
 
     public static void onAttack(AbstractCreature owner, DamageInfo info, int damageAmount, AbstractCreature target) {
-        for (BlockContainer b : blockContainers(owner)) {
+        for (BlockInstance b : blockInstances(owner)) {
             for (AbstractBlockModifier m: b.getBlockTypes()) {
                 m.onAttack(info, damageAmount, target);
             }
@@ -203,7 +203,7 @@ public class BlockModifierManager {
 
     //TODO not manipulating damage taken. This is a design choice, but revisit later.
     public static void onAttacked(AbstractCreature owner, DamageInfo info, int damageAmount) {
-        for (BlockContainer b : blockContainers(owner)) {
+        for (BlockInstance b : blockInstances(owner)) {
             for (AbstractBlockModifier m : b.getBlockTypes()) {
                 m.onAttacked(info, damageAmount);
             }
@@ -212,7 +212,7 @@ public class BlockModifierManager {
 
     //TODO not manipulating damage taken. This is a design choice, but revisit later.
     public static int onAttackedPostBlockReductions(AbstractCreature owner, DamageInfo info, int damageAmount) {
-        for (BlockContainer b : blockContainers(owner)) {
+        for (BlockInstance b : blockInstances(owner)) {
             for (AbstractBlockModifier m : b.getBlockTypes()) {
                 m.onAttackedPostBlockReductions(info, damageAmount);
             }
@@ -221,7 +221,7 @@ public class BlockModifierManager {
     }
 
     public static void onCardDraw(AbstractCreature owner, AbstractCard card) {
-        for (BlockContainer b : blockContainers(owner)) {
+        for (BlockInstance b : blockInstances(owner)) {
             for (AbstractBlockModifier m : b.getBlockTypes()) {
                 m.onCardDraw(card);
             }
@@ -229,7 +229,7 @@ public class BlockModifierManager {
     }
 
     public static void onUseCard(AbstractCreature owner, AbstractCard card, UseCardAction action) {
-        for (BlockContainer b : blockContainers(owner)) {
+        for (BlockInstance b : blockInstances(owner)) {
             for (AbstractBlockModifier m : b.getBlockTypes()) {
                 m.onUseCard(card, action);
             }
@@ -239,7 +239,7 @@ public class BlockModifierManager {
     public static boolean onApplyPower(AbstractCreature owner, AbstractPower power, AbstractCreature target, AbstractCreature source) {
         boolean retVal = true;
         if (owner != null) {
-            for (BlockContainer b : blockContainers(owner)) {
+            for (BlockInstance b : blockInstances(owner)) {
                 for (AbstractBlockModifier m : b.getBlockTypes()) {
                     retVal &= m.onApplyPower(power, target, source);
                 }
@@ -250,7 +250,7 @@ public class BlockModifierManager {
 
     public static int onApplyPowerStacks(AbstractCreature owner, AbstractPower power, AbstractCreature target, AbstractCreature source, int stackAmount) {
         if (owner != null) {
-            for (BlockContainer b : blockContainers(owner)) {
+            for (BlockInstance b : blockInstances(owner)) {
                 for (AbstractBlockModifier m : b.getBlockTypes()) {
                     stackAmount = m.onApplyPowerStacks(power, target, source, stackAmount);
                 }
@@ -262,7 +262,7 @@ public class BlockModifierManager {
     public static boolean onReceivePower(AbstractCreature owner, AbstractPower power, AbstractCreature target, AbstractCreature source) {
         boolean retVal = true;
         if (owner != null) {
-            for (BlockContainer b : blockContainers(owner)) {
+            for (BlockInstance b : blockInstances(owner)) {
                 for (AbstractBlockModifier m : b.getBlockTypes()) {
                     retVal &= m.onReceivePower(power, target, source);
                 }
@@ -273,7 +273,7 @@ public class BlockModifierManager {
 
     public static int onReceivePowerStacks(AbstractCreature owner, AbstractPower power, AbstractCreature target, AbstractCreature source, int stackAmount) {
         if (owner != null) {
-            for (BlockContainer b : blockContainers(owner)) {
+            for (BlockInstance b : blockInstances(owner)) {
                 for (AbstractBlockModifier m : b.getBlockTypes()) {
                     stackAmount = m.onReceivePowerStacks(power, target, source, stackAmount);
                 }

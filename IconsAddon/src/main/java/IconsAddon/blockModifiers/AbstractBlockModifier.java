@@ -1,6 +1,6 @@
 package IconsAddon.blockModifiers;
 
-import IconsAddon.util.BlockContainer;
+import IconsAddon.util.BlockInstance;
 import IconsAddon.util.BlockModifierManager;
 import basemod.helpers.TooltipInfo;
 import com.badlogic.gdx.graphics.Color;
@@ -22,13 +22,13 @@ public abstract class AbstractBlockModifier implements Comparable<AbstractBlockM
         BOTTOM
     }
     public AbstractCreature owner;
-    public BlockContainer container;
+    public BlockInstance instance;
     public boolean automaticBindingForCards = true;
 
     public AbstractBlockModifier() {}
 
-    public void setContainer(BlockContainer container) {
-        this.container = container;
+    public void setInstance(BlockInstance container) {
+        this.instance = container;
     }
     public void setOwner(AbstractCreature owner) {
         this.owner = owner;
@@ -129,15 +129,15 @@ public abstract class AbstractBlockModifier implements Comparable<AbstractBlockM
     }
 
     protected void reduceThisBlockContainer(int amount) {
-        BlockModifierManager.reduceSpecificBlockType(container, amount);
+        BlockModifierManager.reduceSpecificBlockType(instance, amount);
     }
 
     protected void removeThisBlockContainer() {
-        BlockModifierManager.removeSpecificBlockType(container);
+        BlockModifierManager.removeSpecificBlockType(instance);
     }
 
     protected int getCurrentAmount() {
-        return container.getBlockAmount();
+        return instance.getBlockAmount();
     }
 
     public Priority priority() {

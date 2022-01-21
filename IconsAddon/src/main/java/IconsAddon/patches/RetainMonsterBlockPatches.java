@@ -1,12 +1,10 @@
 package IconsAddon.patches;
 
 import IconsAddon.blockModifiers.AbstractBlockModifier;
-import IconsAddon.util.BlockContainer;
+import IconsAddon.util.BlockInstance;
 import IconsAddon.util.BlockModifierManager;
 import com.evacipated.cardcrawl.modthespire.lib.*;
-import com.megacrit.cardcrawl.characters.AbstractPlayer;
 import com.megacrit.cardcrawl.core.AbstractCreature;
-import com.megacrit.cardcrawl.dungeons.AbstractDungeon;
 import com.megacrit.cardcrawl.monsters.AbstractMonster;
 import com.megacrit.cardcrawl.monsters.MonsterGroup;
 import javassist.CtBehavior;
@@ -46,7 +44,7 @@ public class RetainMonsterBlockPatches {
     public static class PreBlockLossCall {
         @SpireInsertPatch(locator = Locator.class, localvars = "m")
         public static void preBlockLoss(MonsterGroup __instance, AbstractMonster m) {
-            for (BlockContainer b : BlockModifierManager.blockContainers(m)) {
+            for (BlockInstance b : BlockModifierManager.blockInstances(m)) {
                 for (AbstractBlockModifier mod : b.getBlockTypes()) {
                     mod.atStartOfTurnPreBlockLoss();
                 }
@@ -69,7 +67,7 @@ public class RetainMonsterBlockPatches {
                 int tmp = amount[0];
                 int removedAmount;
                 //Specifically retain the block types that are not fully removed
-                for (BlockContainer b : BlockModifierManager.blockContainers(__instance)) {
+                for (BlockInstance b : BlockModifierManager.blockInstances(__instance)) {
                     removedAmount = Math.min(b.getBlockAmount(), Math.min(b.computeStartTurnBlockLoss(), tmp));
                     for (AbstractBlockModifier m : b.getBlockTypes()) {
                         m.onStartOfTurnBlockLoss(removedAmount);
@@ -86,7 +84,7 @@ public class RetainMonsterBlockPatches {
                         break;
                     }
                 }
-                BlockModifierManager.removeEmptyBlockContainers(__instance);
+                BlockModifierManager.removeEmptyBlockInstances(__instance);
                 amount[0] = BlockModifierManager.getBlockRetValBasedOnRemainingAmounts(__instance);
             }
         }

@@ -1,6 +1,6 @@
 package IconsAddon.patches;
 
-import IconsAddon.util.BlockContainer;
+import IconsAddon.util.BlockInstance;
 import IconsAddon.util.BlockModifierManager;
 import basemod.ClickableUIElement;
 import basemod.helpers.TooltipInfo;
@@ -20,7 +20,7 @@ import com.megacrit.cardcrawl.helpers.TipHelper;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class RenderStackedBlockContainers {
+public class RenderStackedBlockInstances {
     private static final float dx = 50f * Settings.scale;
     private static final float dy = 40f * Settings.scale;
 
@@ -37,13 +37,13 @@ public class RenderStackedBlockContainers {
             if (BlockStackElementField.element.get(__instance) == null) {
                 BlockStackElementField.element.set(__instance, new BlockStackElement(__instance));
             }
-            if (BlockModifierManager.blockContainers(__instance).stream().allMatch(BlockContainer::defaultBlock)) {
+            if (BlockModifierManager.blockInstances(__instance).stream().allMatch(BlockInstance::defaultBlock)) {
                 return;
             }
             int offsetY = 0;
-            ArrayList<BlockContainer> containers = new ArrayList<>(BlockModifierManager.blockContainers(__instance));
-            Collections.reverse(containers);
-            for (BlockContainer b : containers) {
+            ArrayList<BlockInstance> instances = new ArrayList<>(BlockModifierManager.blockInstances(__instance));
+            Collections.reverse(instances);
+            for (BlockInstance b : instances) {
                 if (b.getBlockColor() != null) {
                     sb.setColor(b.getBlockColor());
                 } else {
@@ -86,7 +86,7 @@ public class RenderStackedBlockContainers {
         protected void onHover() {
             //ReflectionHacks.RStaticMethod m = ReflectionHacks.privateStaticMethod(TipHelper.class, "renderPowerTips", float.class, float.class, SpriteBatch.class, ArrayList.class);
             ArrayList<PowerTip> tips = new ArrayList<>();
-            for (BlockContainer b : BlockModifierManager.blockContainers(owner)) {
+            for (BlockInstance b : BlockModifierManager.blockInstances(owner)) {
                 tips.add(new TooltipInfo(b.makeName(), b.makeDescription()).toPowerTip());
             }
             //Object[] o = {x, y, sb, tips};

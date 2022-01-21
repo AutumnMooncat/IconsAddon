@@ -2,11 +2,11 @@ package IconsAddon.patches;
 
 import IconsAddon.blockModifiers.AbstractBlockModifier;
 import IconsAddon.damageModifiers.AbstractDamageModifier;
-import IconsAddon.powers.OnCreateBlockContainerPower;
+import IconsAddon.powers.OnCreateBlockInstancePower;
 import IconsAddon.powers.DamageModApplyingPower;
 import IconsAddon.relics.DamageModApplyingRelic;
-import IconsAddon.relics.OnCreateBlockContainerRelic;
-import IconsAddon.util.BlockContainer;
+import IconsAddon.relics.OnCreateBlockInstanceRelic;
+import IconsAddon.util.BlockInstance;
 import IconsAddon.util.BlockModifierManager;
 import IconsAddon.util.DamageModifierManager;
 import com.badlogic.gdx.math.MathUtils;
@@ -208,13 +208,13 @@ public class BindingPatches {
                 instigator = cardInUse;
             }
             for (AbstractPower p : __instance.powers) {
-                if (p instanceof OnCreateBlockContainerPower) {
-                    ((OnCreateBlockContainerPower) p).onCreateBlockContainer(blockSet, instigator);
+                if (p instanceof OnCreateBlockInstancePower) {
+                    ((OnCreateBlockInstancePower) p).onCreateBlockInstance(blockSet, instigator);
                 }
             }
             for (AbstractRelic r : AbstractDungeon.player.relics) {
-                if (r instanceof OnCreateBlockContainerRelic) {
-                    ((OnCreateBlockContainerRelic) r).onCreateBlockContainer(blockSet, instigator);
+                if (r instanceof OnCreateBlockInstanceRelic) {
+                    ((OnCreateBlockInstanceRelic) r).onCreateBlockInstance(blockSet, instigator);
                 }
             }
             ArrayList<AbstractBlockModifier> blockTypes = new ArrayList<>();
@@ -223,8 +223,8 @@ public class BindingPatches {
             }
             blockSet.clear();
             Collections.sort(blockTypes);
-            BlockContainer b = new BlockContainer(__instance, (int)tmp, blockTypes);
-            BlockModifierManager.addBlockContainer(__instance, b);
+            BlockInstance b = new BlockInstance(__instance, (int)tmp, blockTypes);
+            BlockModifierManager.addBlockInstance(__instance, b);
         }
     }
 

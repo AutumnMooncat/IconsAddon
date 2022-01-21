@@ -1,7 +1,7 @@
 package IconsAddon.patches;
 
 import IconsAddon.blockModifiers.AbstractBlockModifier;
-import IconsAddon.util.BlockContainer;
+import IconsAddon.util.BlockInstance;
 import IconsAddon.util.BlockModifierManager;
 import IconsAddon.util.DamageModifierManager;
 import basemod.patches.com.megacrit.cardcrawl.actions.GameActionManager.OnPlayerLoseBlockToggle;
@@ -26,7 +26,7 @@ import javassist.CtBehavior;
 
 public class BlockModifierPatches {
 
-    public static BlockContainer specificContainerToReduce = null;
+    public static BlockInstance specificInstanceToReduce = null;
 
     @SpirePatch(clz = ModifyPlayerLoseBlock.class, method = "Prefix")
     public static class ModifyStartOfTurnBlockLossPatch {
@@ -36,7 +36,7 @@ public class BlockModifierPatches {
                 int tmp = amount[0];
                 int removedAmount;
                 //Specifically retain the block types that are not fully removed
-                for (BlockContainer b : BlockModifierManager.blockContainers(__instance)) {
+                for (BlockInstance b : BlockModifierManager.blockInstances(__instance)) {
                     removedAmount = Math.min(b.getBlockAmount(), Math.min(b.computeStartTurnBlockLoss(), tmp));
                     for (AbstractBlockModifier m : b.getBlockTypes()) {
                         m.onStartOfTurnBlockLoss(removedAmount);
@@ -53,7 +53,7 @@ public class BlockModifierPatches {
                         break;
                     }
                 }
-                BlockModifierManager.removeEmptyBlockContainers(__instance);
+                BlockModifierManager.removeEmptyBlockInstances(__instance);
                 amount[0] = BlockModifierManager.getBlockRetValBasedOnRemainingAmounts(__instance);
             }
         }
@@ -70,16 +70,16 @@ public class BlockModifierPatches {
                 boolean isStartTurnLostBlock = OnPlayerLoseBlockToggle.isEnabled;
                 int backupIndex = -1;
                 int reduction = 0;
-                if (specificContainerToReduce != null) {
-                    backupIndex = BlockModifierManager.blockContainers(__instance).indexOf(specificContainerToReduce);
-                    BlockModifierManager.blockContainers(__instance).remove(backupIndex);
-                    BlockModifierManager.blockContainers(__instance).add(0, specificContainerToReduce);
+                if (specificInstanceToReduce != null) {
+                    backupIndex = BlockModifierManager.blockInstances(__instance).indexOf(specificInstanceToReduce);
+                    BlockModifierManager.blockInstances(__instance).remove(backupIndex);
+                    BlockModifierManager.blockInstances(__instance).add(0, specificInstanceToReduce);
                 }
                 if (!isStartTurnLostBlock && !RetainMonsterBlockPatches.monsterStartOfTurn) {
-                    for (BlockContainer b : BlockModifierManager.blockContainers(__instance)) {
+                    for (BlockInstance b : BlockModifierManager.blockInstances(__instance)) {
                         removedAmount = Math.min(tmp, b.getBlockAmount());
                         b.setBlockAmount(b.getBlockAmount() - removedAmount);
-                        if (b != specificContainerToReduce) {
+                        if (b != specificInstanceToReduce) {
                             for (AbstractBlockModifier m : b.getBlockTypes()) {
                                 m.onThisBlockDamaged(info, removedAmount);
                             }
@@ -98,12 +98,12 @@ public class BlockModifierPatches {
                         }
                     }
                 }
-                if (specificContainerToReduce != null) {
-                    BlockModifierManager.blockContainers(__instance).remove(0);
-                    BlockModifierManager.blockContainers(__instance).add(backupIndex, specificContainerToReduce);
-                    specificContainerToReduce = null;
+                if (specificInstanceToReduce != null) {
+                    BlockModifierManager.blockInstances(__instance).remove(0);
+                    BlockModifierManager.blockInstances(__instance).add(backupIndex, specificInstanceToReduce);
+                    specificInstanceToReduce = null;
                 }
-                BlockModifierManager.removeEmptyBlockContainers(__instance);
+                BlockModifierManager.removeEmptyBlockInstances(__instance);
                 damageAmount[0] -= reduction;
                 if (damageAmount[0] < 0) {
                     damageAmount[0] = 0;
@@ -161,7 +161,7 @@ public class BlockModifierPatches {
     public static class ApplyPowersToBlock {
         @SpireInsertPatch(locator = BlockLocator.class, localvars = {"tmp"})
         public static void blockInsert(AbstractCard __instance, @ByRef float[] tmp) {
-            for (BlockContainer b : BlockModifierManager.blockContainers(AbstractDungeon.player)) {
+            for (BlockInstance b : BlockModifierManager.blockInstances(AbstractDungeon.player)) {
                 for (AbstractBlockModifier m : b.getBlockTypes()) {
                     tmp[0] = m.onModifyBlock(tmp[0], __instance);
                 }
@@ -170,7 +170,7 @@ public class BlockModifierPatches {
 
         @SpireInsertPatch(locator = BlockFinalLocator.class, localvars = {"tmp"})
         public static void blockFinalInsert(AbstractCard __instance, @ByRef float[] tmp) {
-            for (BlockContainer b : BlockModifierManager.blockContainers(AbstractDungeon.player)) {
+            for (BlockInstance b : BlockModifierManager.blockInstances(AbstractDungeon.player)) {
                 for (AbstractBlockModifier m : b.getBlockTypes()) {
                     tmp[0] = m.onModifyBlockFinal(tmp[0], __instance);
                 }
@@ -218,7 +218,7 @@ public class BlockModifierPatches {
         @SpirePrefixPatch
         public static void byeByeContainers(AbstractPlayer __instance) {
             for (AbstractMonster m : AbstractDungeon.getMonsters().monsters) {
-                BlockModifierManager.removeAllBlockContainers(m);
+                BlockModifierManager.removeAllBlockInstances(m);
             }
         }
     }
@@ -227,7 +227,7 @@ public class BlockModifierPatches {
     public static class ClearPlayerContainersOnPrep {
         @SpirePrefixPatch
         public static void byeByeContainers(AbstractPlayer __instance) {
-            BlockModifierManager.removeAllBlockContainers(__instance);
+            BlockModifierManager.removeAllBlockInstances(__instance);
         }
     }
 
@@ -235,7 +235,7 @@ public class BlockModifierPatches {
     public static class ClearContainerOnDeath {
         @SpireInsertPatch(locator = MonsterBlockLossOnDeathLocator.class)
         public static void byeByeContainers(AbstractMonster __instance) {
-            BlockModifierManager.removeAllBlockContainers(__instance);
+            BlockModifierManager.removeAllBlockInstances(__instance);
         }
     }
 
@@ -340,7 +340,7 @@ public class BlockModifierPatches {
     public static class PreBlockLossCall {
         @SpireInsertPatch(locator = Locator.class)
         public static void preBlockLoss(GameActionManager __instance) {
-            for (BlockContainer b : BlockModifierManager.blockContainers(AbstractDungeon.player)) {
+            for (BlockInstance b : BlockModifierManager.blockInstances(AbstractDungeon.player)) {
                 for (AbstractBlockModifier mod : b.getBlockTypes()) {
                     mod.atStartOfTurnPreBlockLoss();
                 }
