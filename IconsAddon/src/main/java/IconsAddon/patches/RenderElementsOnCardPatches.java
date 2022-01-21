@@ -1,11 +1,11 @@
 package IconsAddon.patches;
 
 import IconsAddon.damageModifiers.AbstractDamageModifier;
+import IconsAddon.icons.AbstractCustomIcon;
 import IconsAddon.powers.DamageModApplyingPower;
 import IconsAddon.util.DamageModifierManager;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePatch;
 import com.evacipated.cardcrawl.modthespire.lib.SpirePostfixPatch;
 import com.megacrit.cardcrawl.cards.AbstractCard;
@@ -16,6 +16,7 @@ import com.megacrit.cardcrawl.powers.AbstractPower;
 import java.util.ArrayList;
 
 public class RenderElementsOnCardPatches {
+    private static final float UPSCALE_CONSTANT = 4F/3F;
 
     //Don't bother rendering if it isn't in one of 4 immediately viewable locations. We also don't want to render in master deck
     public static boolean validLocation(AbstractCard c) {
@@ -26,8 +27,7 @@ public class RenderElementsOnCardPatches {
     }
 
     @SpirePatch(clz = AbstractCard.class, method = "renderEnergy")
-    public static class RenderOnCardPatch
-    {
+    public static class RenderOnCardPatch {
         @SpirePostfixPatch
         public static void RenderOnCard(AbstractCard __instance, SpriteBatch sb) {
             if (AbstractDungeon.player != null && validLocation(__instance)) {
@@ -53,15 +53,11 @@ public class RenderElementsOnCardPatches {
             }
             if (!mods.isEmpty()) {
                 sb.setColor(Color.WHITE.cpy());
-                float dx = -(mods.size()-1)*16f;
+                float dx = -(mods.size()-1)*UPSCALE_CONSTANT * AbstractCustomIcon.RENDER_CONSTANT / 2F;
                 float dy = 210f;
                 for (AbstractDamageModifier mod : mods) {
-                    TextureAtlas.AtlasRegion img = mod.getAccompanyingIcon().getAtlasTexture();
-                    sb.draw(img, drawX + dx + img.offsetX - (float) img.originalWidth / 2.0F, drawY + dy + img.offsetY - (float) img.originalHeight / 2.0F,
-                            (float) img.originalWidth / 2.0F - img.offsetX - dx, (float) img.originalHeight / 2.0F - img.offsetY - dy,
-                            (float) img.packedWidth, (float) img.packedHeight,
-                            card.drawScale * Settings.scale, card.drawScale * Settings.scale, card.angle);
-                    dx += 32f;
+                    mod.getAccompanyingIcon().render(sb, drawX, drawY, dx, dy, UPSCALE_CONSTANT*card.drawScale*Settings.scale, card.angle);
+                    dx += UPSCALE_CONSTANT * AbstractCustomIcon.RENDER_CONSTANT;
                 }
             }
         }

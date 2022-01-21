@@ -6,9 +6,6 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.badlogic.gdx.math.Affine2;
-import com.badlogic.gdx.math.MathUtils;
 import com.evacipated.cardcrawl.modthespire.lib.*;
 import com.megacrit.cardcrawl.cards.AbstractCard;
 import com.megacrit.cardcrawl.core.Settings;
@@ -16,30 +13,18 @@ import com.megacrit.cardcrawl.helpers.FontHelper;
 import com.megacrit.cardcrawl.screens.SingleCardViewPopup;
 import javassist.CtBehavior;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.HashMap;
 import java.util.HashSet;
 
 public class CardDescriptionCustomIcons {
-    private static boolean overrideRenderScale;
-    private static float renderScale;
 
-    @SpirePatch(clz= AbstractCard.class, method="renderDescription")
+    @SpirePatch(clz=AbstractCard.class, method="renderDescription")
     @SpirePatch(clz=AbstractCard.class, method="renderDescriptionCN")
-    public static class RenderSmallIcon
-    {
+    public static class RenderSmallIcon {
         private static final float CARD_ENERGY_IMG_WIDTH = 26.0f * Settings.scale;
         private static final HashSet<AbstractCard> reinit = new HashSet<>();
 
-        @SpireInsertPatch(
-                locator=Locator.class,
-                localvars={"spacing", "i", "start_x", "draw_y", "font", "textColor", "tmp", "gl"}
-        )
-        public static void Insert(AbstractCard __instance, SpriteBatch sb,
-                                  float spacing, int i, @ByRef float[] start_x, float draw_y,
-                                  BitmapFont font, Color textColor, @ByRef String[] tmp, GlyphLayout gl)
-        {
+        @SpireInsertPatch(locator=Locator.class, localvars={"spacing", "i", "start_x", "draw_y", "font", "textColor", "tmp", "gl"})
+        public static void Insert(AbstractCard __instance, SpriteBatch sb, float spacing, int i, @ByRef float[] start_x, float draw_y, BitmapFont font, Color textColor, @ByRef String[] tmp, GlyphLayout gl) {
             if (tmp[0].length() > 0 && tmp[0].charAt(0) == '[') {
                 String key = tmp[0].trim();
                 if (key.endsWith(AbstractCustomIcon.CODE_ENDING)) {
@@ -57,28 +42,11 @@ public class CardDescriptionCustomIcons {
             }
         }
 
-        public static void renderSmallIcon(AbstractCard card, SpriteBatch sb, AbstractCustomIcon icon, float offsetX, float offsetY)
-        {
-            TextureAtlas.AtlasRegion region = icon.getAtlasTexture();
-            float renderScale = icon.getRenderScale();
-            Affine2 aff = new Affine2();
-            aff.setToTrnRotScl(
-                    card.current_x + offsetX * card.drawScale * Settings.scale,
-                    card.current_y + (offsetY) * card.drawScale * Settings.scale,
-                    MathUtils.degreesToRadians * card.angle,
-                    card.drawScale * Settings.scale * renderScale,
-                    card.drawScale * Settings.scale * renderScale
-            );
-            sb.draw(
-                    region,
-                    region.packedWidth,
-                    region.packedHeight,
-                    aff
-            );
+        public static void renderSmallIcon(AbstractCard card, SpriteBatch sb, AbstractCustomIcon icon, float offsetX, float offsetY) {
+            icon.render(sb, card.current_x + offsetX * Settings.scale * card.drawScale, card.current_y + offsetY * Settings.scale * card.drawScale, icon.region.getRegionWidth()/2F, icon.region.getRegionWidth()/2F, Settings.scale * card.drawScale, card.angle);
         }
 
-        private static class Locator extends SpireInsertLocator
-        {
+        private static class Locator extends SpireInsertLocator {
             @Override
             public int[] Locate(CtBehavior ctBehavior) throws Exception
             {
@@ -89,22 +57,11 @@ public class CardDescriptionCustomIcons {
         }
     }
 
-    @SpirePatch(clz= SingleCardViewPopup.class, method="renderDescription")
+    @SpirePatch(clz=SingleCardViewPopup.class, method="renderDescription")
     @SpirePatch(clz=SingleCardViewPopup.class, method="renderDescriptionCN")
-    public static class RenderSmallIconSingleCardView
-    {
-        @SpireInsertPatch(
-                locator=Locator.class,
-                localvars={
-                        "spacing", "i", "start_x", "tmp", "gl",
-                        "card_energy_w", "drawScale", "current_x", "card"
-                }
-        )
-        public static void Insert(SingleCardViewPopup __instance, SpriteBatch sb,
-                                  float spacing, int i, @ByRef float[] start_x,
-                                  @ByRef String[] tmp, GlyphLayout gl,
-                                  float card_energy_w, float drawScale, float current_x, AbstractCard card)
-        {
+    public static class RenderSmallIconSingleCardView {
+        @SpireInsertPatch(locator=Locator.class, localvars={"spacing", "i", "start_x", "tmp", "gl", "card_energy_w", "drawScale", "current_x", "current_y", "card"})
+        public static void Insert(SingleCardViewPopup __instance, SpriteBatch sb, float spacing, int i, @ByRef float[] start_x, @ByRef String[] tmp, GlyphLayout gl, float card_energy_w, float drawScale, float current_x, float current_y, AbstractCard card) {
             if (tmp[0].length() > 0 && tmp[0].charAt(0) == '[') {
                 String key = tmp[0].trim();
                 if (key.endsWith(AbstractCustomIcon.CODE_ENDING)) {
@@ -113,31 +70,17 @@ public class CardDescriptionCustomIcons {
                 AbstractCustomIcon icon = CustomIconHelper.getIcon(key);
                 if (icon != null) {
                     gl.width = card_energy_w * drawScale;
-                    try {
-                        Method renderSmallEnergy = SingleCardViewPopup.class.getDeclaredMethod("renderSmallEnergy", SpriteBatch.class, TextureAtlas.AtlasRegion.class, float.class, float.class);
-                        renderSmallEnergy.setAccessible(true);
-                        overrideRenderScale = true;
-                        renderScale = icon.getRenderScale();
-                        renderSmallEnergy.invoke(__instance, sb, icon.getAtlasTexture(),
-                                (start_x[0] - current_x) / Settings.scale / drawScale,
-                                -86.0f - ((card.description.size() - 4.0f) / 2.0f - i + 1.0f) * spacing);
-                        overrideRenderScale = false;
-                        renderScale = 1f;
-                        sb.flush();
-                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                        e.printStackTrace();
-                    }
+                    //icon.render(sb, current_x, current_y, start_x[0] - current_x, -86.0f - ((card.description.size() - 4.0f) / 2.0f - i + 1.0f) * spacing, drawScale * Settings.scale, card.angle);
+                    renderSCVIcon(sb, icon, (start_x[0] - current_x) / Settings.scale / drawScale, -86.0f - ((card.description.size() - 4.0f) / 2.0f - i + 1.0f) * spacing, drawScale, current_x, current_y);
                     start_x[0] += gl.width;
                     tmp[0] = "";
                 }
             }
         }
 
-        private static class Locator extends SpireInsertLocator
-        {
+        private static class Locator extends SpireInsertLocator {
             @Override
-            public int[] Locate(CtBehavior ctBehavior) throws Exception
-            {
+            public int[] Locate(CtBehavior ctBehavior) throws Exception {
                 Matcher matcher = new Matcher.MethodCallMatcher(GlyphLayout.class, "setText");
                 int[] lines = LineFinder.findAllInOrder(ctBehavior, matcher);
                 return new int[]{lines[lines.length-1]}; // Only last occurrence
@@ -145,33 +88,15 @@ public class CardDescriptionCustomIcons {
         }
     }
 
-    @SpirePatch(clz=SingleCardViewPopup.class, method="renderSmallEnergy")
-    public static class ScaleProperlyPls {
-        @SpirePrefixPatch
-        public static SpireReturn<?> pls(SingleCardViewPopup __instance, SpriteBatch sb, TextureAtlas.AtlasRegion region, float x, float y, float ___current_x, float ___current_y, float ___drawScale) {
-            if (overrideRenderScale) {
-                sb.setColor(Color.WHITE);
-                sb.draw(region.getTexture(), ___current_x + x * Settings.scale * ___drawScale + region.offsetX * Settings.scale - 4.0F * Settings.scale, ___current_y + y * Settings.scale * ___drawScale + 280.0F * Settings.scale, 0.0F, 0.0F, (float)region.packedWidth, (float)region.packedHeight, ___drawScale * Settings.scale * renderScale, ___drawScale * Settings.scale * renderScale, 0.0F, region.getRegionX(), region.getRegionY(), region.getRegionWidth(), region.getRegionHeight(), false, false);
-                return SpireReturn.Return(null);
-            }
-            return SpireReturn.Continue();
-        }
+    public static void renderSCVIcon(SpriteBatch sb, AbstractCustomIcon icon, float x, float y, float scale, float cx, float cy) {
+        icon.render(sb, cx + x * Settings.scale * scale + icon.region.offsetX * Settings.scale - 4.0F * Settings.scale, cy + y * Settings.scale * scale + 280.0F * Settings.scale, icon.region.getRegionWidth()/2F, icon.region.getRegionWidth()/2F, scale * Settings.scale, 0);
     }
 
-    @SpirePatch(
-            clz=AbstractCard.class,
-            method="initializeDescription"
-    )
-    public static class AlterIconDescriptionSize
-    {
+    @SpirePatch(clz=AbstractCard.class, method="initializeDescription")
+    public static class AlterIconDescriptionSize {
         private static final float CARD_ENERGY_IMG_WIDTH = 16.0f * Settings.scale;
-
-        @SpireInsertPatch(
-                locator=Locator.class,
-                localvars={"gl", "word"}
-        )
-        public static void Insert(AbstractCard __instance,  @ByRef GlyphLayout[] gl, String word)
-        {
+        @SpireInsertPatch(locator=Locator.class, localvars={"gl", "word"})
+        public static void Insert(AbstractCard __instance,  @ByRef GlyphLayout[] gl, String word) {
             if (word.length() > 0 && word.charAt(0) == '[') {
                 AbstractCustomIcon icon = CustomIconHelper.getIcon(word.trim());
                 if (icon != null) {
@@ -181,11 +106,9 @@ public class CardDescriptionCustomIcons {
             }
         }
 
-        private static class Locator extends SpireInsertLocator
-        {
+        private static class Locator extends SpireInsertLocator {
             @Override
-            public int[] Locate(CtBehavior ctBehavior) throws Exception
-            {
+            public int[] Locate(CtBehavior ctBehavior) throws Exception {
                 Matcher matcher = new Matcher.FieldAccessMatcher(AbstractCard.class, "DESC_BOX_WIDTH");
                 return LineFinder.findInOrder(ctBehavior, matcher);
             }
