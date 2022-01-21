@@ -13,9 +13,9 @@ import com.megacrit.cardcrawl.core.AbstractCreature;
 
 import java.util.List;
 
-public class DamageModifierHelper {
+public class BindingHelper {
 
-    public static DamageInfo makeBoundDamageInfo(List<AbstractDamageModifier> mods, AbstractCreature damageSource, int base, DamageInfo.DamageType type) {
+    public static DamageInfo makeInfo(List<AbstractDamageModifier> mods, AbstractCreature damageSource, int base, DamageInfo.DamageType type) {
         //Set the directly bound mods before creating the damage info
         BindingPatches.directlyBoundDamageMods.addAll(mods);
         DamageInfo di = new DamageInfo(damageSource, base, type);
@@ -24,22 +24,37 @@ public class DamageModifierHelper {
         return di;
     }
 
-    public static DamageInfo makeBoundDamageInfo(AbstractCard o, AbstractCreature damageSource, int base, DamageInfo.DamageType type) {
+    public static DamageInfo makeInfo(AbstractCard o, AbstractCreature damageSource, int base, DamageInfo.DamageType type) {
         //Set the directly bound instigator before creating the damage info
         BindingPatches.directlyBoundInstigator = o;
-        DamageInfo di = makeBoundDamageInfo(DamageModifierManager.modifiers(o), damageSource, base, type);
+        DamageInfo di = makeInfo(DamageModifierManager.modifiers(o), damageSource, base, type);
         //Unset it once we are done, as it has already been loaded into the damage info
         BindingPatches.directlyBoundInstigator = null;
         return di;
     }
 
-    public static DamageInfo makeBoundDamageInfo(DamageModContainer o, AbstractCreature damageSource, int base, DamageInfo.DamageType type) {
+    public static DamageInfo makeInfo(DamageModContainer o, AbstractCreature damageSource, int base, DamageInfo.DamageType type) {
         //Set the directly bound instigator before creating the damage info
         BindingPatches.directlyBoundInstigator = o.instigator();
-        DamageInfo di = makeBoundDamageInfo(o.modifiers(), damageSource, base, type);
+        DamageInfo di = makeInfo(o.modifiers(), damageSource, base, type);
         //Unset it once we are done, as it has already been loaded into the damage info
         BindingPatches.directlyBoundInstigator = null;
         return di;
+    }
+
+    public static AbstractGameAction makeAction(List<AbstractDamageModifier> mods, AbstractGameAction action) {
+        BindingPatches.BoundGameActionFields.actionDelayedDamageMods.get(action).addAll(mods);
+        return action;
+    }
+
+    public static AbstractGameAction makeAction(AbstractCard o, AbstractGameAction action) {
+        BindingPatches.BoundGameActionFields.actionDelayedDirectlyBoundInstigator.set(action, o);
+        return makeAction(DamageModifierManager.modifiers(o), action);
+    }
+
+    public static AbstractGameAction makeAction(DamageModContainer o, AbstractGameAction action) {
+        BindingPatches.BoundGameActionFields.actionDelayedDirectlyBoundInstigator.set(action, o.instigator());
+        return makeAction(o.modifiers(), action);
     }
 
     public static void bindAction(List<AbstractDamageModifier> mods, AbstractGameAction action) {
@@ -56,7 +71,7 @@ public class DamageModifierHelper {
         bindAction(o.modifiers(), action);
     }
 
-    public static DamageAllEnemiesAction makeModifiedDamageAllEnemiesAction(AbstractCard o, AbstractCreature source, int[] amount, DamageInfo.DamageType type, AbstractGameAction.AttackEffect effect, boolean isFast) {
+/*    public static DamageAllEnemiesAction makeModifiedDamageAllEnemiesAction(AbstractCard o, AbstractCreature source, int[] amount, DamageInfo.DamageType type, AbstractGameAction.AttackEffect effect, boolean isFast) {
         DamageAllEnemiesAction action = new DamageAllEnemiesAction(source, amount, type, effect, isFast);
         bindAction(o, action);
         return action;
@@ -126,5 +141,5 @@ public class DamageModifierHelper {
         VampireDamageAllEnemiesAction action = new VampireDamageAllEnemiesAction(source, amount, type, effect);
         bindAction(o, action);
         return action;
-    }
+    }*/
 }
